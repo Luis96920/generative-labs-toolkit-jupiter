@@ -26,7 +26,7 @@ lr = 0.0005
 betas = (0.5, 0.999)
 
 # functions
-def lr_lambda(epoch, epochs=200, decay_after=200):
+def lr_lambda(epoch):
     ''' Function for scheduling learning '''
     return 1. if epoch < decay_after else 1 - float(epoch - decay_after) / (epochs - decay_after)
 
