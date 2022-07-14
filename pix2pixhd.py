@@ -65,8 +65,9 @@ def main():
 
     args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
     args.base_results_dir = os.path.join(args.base_results_dir,args.experiment_name)
-
+    
     if(not os.path.exists(args.base_results_dir)):
+        print('creating directories in ' + args.base_results_dir)
         os.makedirs(args.base_results_dir)
         os.makedirs(os.path.join(args.base_results_dir,"CSV"))
         os.makedirs(os.path.join(args.base_results_dir,"Graph"))

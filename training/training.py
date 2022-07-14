@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import time
 
 from models.discriminators import MultiscaleDiscriminator
