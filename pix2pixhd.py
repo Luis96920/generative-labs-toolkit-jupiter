@@ -10,13 +10,16 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description=desc)
 
-    
+    # Dataset parameters and input paths
     parser.add_argument('--n_classes', type=int, default=2, help='Number of segmented instances in the dataset. Eg. Character and background')
     parser.add_argument('--n_features', type=int, default=3, help='Number of channels. Eg. 3 for RGB')
     parser.add_argument('--input_path_dir', type=str, default="/content/drive/MyDrive/GenerativeLabs/dataset/sword_sorcery_data_for_ramiro/paired_data", help='Path root where inputs are located. By default it will contain 3 subfolders: img, inst, label')
     parser.add_argument('--input_img_dir', type=str, default="02_output", help='Folder name for original images located in input_path_dir')
     parser.add_argument('--input_label_dir', type=str, default="01_segmented_input", help='Folder name for labeled images located in input_path_dir')        
-    parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir')    
+    parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir') 
+    parser.add_argument('--base_results_dir', type=str, default="/", help='The base directory to hold the results')
+
+    # Training parameters
     parser.add_argument('--num_epochs', type=int, default=200, help='The number of epochs')   
     parser.add_argument('--decay_after', type=int, default=200, help='Number of epochs with constant lr')   
     parser.add_argument('--lr', type=int, default=0.0005, help='Learning rate')   
@@ -26,7 +29,11 @@ def parse_args():
     parser.add_argument('--batch_size_2', type=int, default=1, help='The size of batch for step 2 of training.')
     parser.add_argument('--target_width_1', type=int, default=1024, help='The size of image for step 1 of training.')
     parser.add_argument('--target_width_2', type=int, default=1024, help='The size of image for step 1 of training.')
+
+    # Experiment parameters
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
+    parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
+
 
 
     """ 
@@ -57,8 +64,6 @@ def main():
     args = parse_args()
 
     args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
-    
-    """
     args.base_results_dir = os.path.join(args.base_results_dir,args.experiment_name)
 
     if(not os.path.exists(args.base_results_dir)):
@@ -68,7 +73,7 @@ def main():
         os.makedirs(os.path.join(args.base_results_dir,"History"))
         os.makedirs(os.path.join(args.base_results_dir,"Saved_Models"))
 
-
+    """
     if(args.img_2_bone):
         normalize_image_data(args)
         train_img_2_bone(args)

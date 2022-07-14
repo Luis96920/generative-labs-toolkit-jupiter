@@ -20,7 +20,7 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, device, desc, epochs=100):
+def train(dataloader, models, optimizers, schedulers, device, desc, verbose=False, epochs=100):
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
@@ -82,10 +82,11 @@ def train(dataloader, models, optimizers, schedulers, device, desc, epochs=100):
             # time 
             time_elapsed_training = time.time() - since_training
             since_load = time.time()
-            print('Loading images complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
-            time_elapsed_load // 60, time_elapsed_load % 60, 60*time_elapsed_load % 60))
-            print('Training complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
-            time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
+            if verbose:
+                print('Loading images complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
+                time_elapsed_load // 60, time_elapsed_load % 60, 60*time_elapsed_load % 60))
+                print('Training complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
+                time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
 
         g_scheduler.step()
         d_scheduler.step()
@@ -162,8 +163,9 @@ def train_networks(args):
         [encoder, generator1, discriminator1],
         [g1_optimizer, d1_optimizer],
         [g1_scheduler, d1_scheduler],
-        device,
+        device=device,
         desc='Epoch loop G1',
+        verbose=args.verbose,
     )
 
 
@@ -191,6 +193,7 @@ def train_networks(args):
         [freeze(encoder), generator2, discriminator2],
         [g2_optimizer, d2_optimizer],
         [g2_scheduler, d2_scheduler],
-        device,
+        device=device,
         desc='Epoch loop G2',
+        verbose=args.verbose,
     )
