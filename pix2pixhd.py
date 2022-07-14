@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--input_img_dir', type=str, default="02_output", help='Folder name for original images located in input_path_dir')
     parser.add_argument('--input_label_dir', type=str, default="01_segmented_input", help='Folder name for labeled images located in input_path_dir')        
     parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir') 
-    parser.add_argument('--base_results_dir', type=str, default="/", help='The base directory to hold the results')
+    parser.add_argument('--base_results_dir', type=str, default="", help='The base directory to hold the results')
 
     # Training parameters
     parser.add_argument('--num_epochs', type=int, default=200, help='The number of epochs')   
