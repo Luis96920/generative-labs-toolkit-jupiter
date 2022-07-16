@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 
 from tqdm import tqdm
 import time
+import os
 
 from models.discriminators import MultiscaleDiscriminator
 from models.generators import GlobalGenerator, LocalEnhancer
@@ -20,14 +21,13 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, device, desc, saved_images_path, verbose=False, epochs=100):
+def train(dataloader, models, optimizers, schedulers, device, desc, saved_images_path, display_step=100, verbose=False, epochs=100):
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
 
     loss_fn = Loss(device=device)
 
-    display_step = 100
     cur_step = 0
     mean_g_loss = 0.0
     mean_d_loss = 0.0
@@ -73,7 +73,7 @@ def train(dataloader, models, optimizers, schedulers, device, desc, saved_images
             if cur_step % display_step == 0 and cur_step > 0:
                 print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
                       .format(cur_step, mean_g_loss, mean_d_loss))
-                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch, saved_images_path)
+                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch, cur_step, saved_images_path)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
             cur_step += 1
@@ -163,7 +163,7 @@ def train_networks(args):
         [g1_optimizer, d1_optimizer],
         [g1_scheduler, d1_scheduler],
         device=device,
-        saved_images_path=args.saved_images_path, 
+        saved_images_path=os.path.join(args.output_path_dir, args.saved_images_path), 
         desc='Epoch loop G1',
         verbose=args.verbose,
     )
@@ -196,5 +196,6 @@ def train_networks(args):
         device=device,
         saved_images_path=args.saved_images_path, 
         desc='Epoch loop G2',
+        display_step=args.display_step,
         verbose=args.verbose,
     )
