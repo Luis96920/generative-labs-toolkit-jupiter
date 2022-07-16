@@ -17,7 +17,6 @@ def parse_args():
     parser.add_argument('--input_img_dir', type=str, default="02_output", help='Folder name for original images located in input_path_dir')
     parser.add_argument('--input_label_dir', type=str, default="01_segmented_input", help='Folder name for labeled images located in input_path_dir')        
     parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir') 
-    parser.add_argument('--base_results_dir', type=str, default="", help='The base directory to hold the results')
 
     # Training parameters
     parser.add_argument('--num_epochs', type=int, default=200, help='The number of epochs')   
@@ -33,6 +32,11 @@ def parse_args():
     # Experiment parameters
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
+
+    # Output paths
+    parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
+    parser.add_argument('--saved_images_path', type=str, default="Images", help='Folder name for save images during training')
+
 
 
 
@@ -69,8 +73,7 @@ def main():
     if(not os.path.exists(args.base_results_dir)):
         print('creating directories in ' + args.base_results_dir)
         os.makedirs(args.base_results_dir)
-        os.makedirs(os.path.join(args.base_results_dir,"CSV"))
-        os.makedirs(os.path.join(args.base_results_dir,"Graph"))
+        os.makedirs(os.path.join(args.base_results_dir, args.saved_images_path))
         os.makedirs(os.path.join(args.base_results_dir,"History"))
         os.makedirs(os.path.join(args.base_results_dir,"Saved_Models"))
 
