@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from tqdm import tqdm
-from tqdm import trange
 import time
 import os
 
@@ -22,7 +21,7 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, device, desc, saved_images_path, display_step=100, verbose=False, epochs=100):
+def train(dataloader, models, optimizers, schedulers, device, desc, saved_images_path, display_step=100, checkpoint=None, verbose=False, epochs=100):
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
@@ -33,11 +32,21 @@ def train(dataloader, models, optimizers, schedulers, device, desc, saved_images
     mean_g_loss = 0.0
     mean_d_loss = 0.0
 
+    if(checkpoint):
+        print('Resuming script ')
+        #cp = torch.load(os.path.join(path_bkp, 'bkp_model_ft.pth'))
+        #epoch_run = cp['epoch']
+        #model.load_state_dict(cp['model_state_dict'])          # Load state of the last epoch
+        #best_model_wts = cp['best_model_wts']
+        #optimizer.load_state_dict(cp['optimizer_state_dict'])
+        #best_acc = cp['best_acc']
+        #print('Resuming script in epoch {}. Best acc = {:4f}'.format(epoch_run, best_acc))
+
     for epoch in tqdm(range(epochs), desc=desc, leave=True):
         # Training epoch
         # time
         since_load = time.time()
-        for (x_real, labels, insts, bounds) in trange(dataloader, desc=f'  inner loop for epoch {epoch}', leave=False):
+        for (x_real, labels, insts, bounds) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch}'):
             x_real = x_real.to(device)
             labels = labels.to(device)
             insts = insts.to(device)
@@ -113,6 +122,11 @@ def train_networks(args):
     lr = args.lr
     betas = (args.beta_1, args.beta_2)
 
+    # output paths
+    saved_images_path = os.path.join(args.output_path_dir, args.saved_images_path)
+    saved_model_path = os.path.join(args.output_path_dir, args.saved_model_path)
+    #output_history_path = os.path.join(args.base_results_dir,args.history_dir)
+
     # functions
     def lr_lambda(epoch):
         ''' Function for scheduling learning '''
@@ -164,8 +178,9 @@ def train_networks(args):
         [g1_optimizer, d1_optimizer],
         [g1_scheduler, d1_scheduler],
         device=device,
-        saved_images_path=os.path.join(args.output_path_dir, args.saved_images_path), 
+        saved_images_path=saved_model_path, 
         desc='Epoch loop G1',
+        checkpoint=args.continue_training,
         display_step=args.display_step,
         verbose=args.verbose,
     )
@@ -196,8 +211,9 @@ def train_networks(args):
         [g2_optimizer, d2_optimizer],
         [g2_scheduler, d2_scheduler],
         device=device,
-        saved_images_path=args.saved_images_path, 
+        saved_images_path=saved_model_path,  
         desc='Epoch loop G2',
+        checkpoint=args.continue_training,
         display_step=args.display_step,
         verbose=args.verbose,
     )
