@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import time
 import os
 
@@ -165,6 +165,7 @@ def train_networks(args):
         device=device,
         saved_images_path=os.path.join(args.output_path_dir, args.saved_images_path), 
         desc='Epoch loop G1',
+        display_step=args.display_step,
         verbose=args.verbose,
     )
 
