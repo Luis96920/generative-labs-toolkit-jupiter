@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
-    parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training.")
+    parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=True, help="Continue training allows to resume training.")
     # Output paths
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
     parser.add_argument('--saved_images_path', type=str, default="Images", help='Folder name for save images during training')
@@ -78,6 +78,8 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir,"History"))
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
+
+    print(args.continue_training)
     train_networks(args)
     print("done training")
 
