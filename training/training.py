@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from tqdm.auto import tqdm
+from tqdm import tqdm
+from tqdm import trange
 import time
 import os
 
@@ -36,7 +37,7 @@ def train(dataloader, models, optimizers, schedulers, device, desc, saved_images
         # Training epoch
         # time
         since_load = time.time()
-        for (x_real, labels, insts, bounds) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch}', leave=False):
+        for (x_real, labels, insts, bounds) in trange(dataloader, desc=f'  inner loop for epoch {epoch}', leave=False):
             x_real = x_real.to(device)
             labels = labels.to(device)
             insts = insts.to(device)
