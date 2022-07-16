@@ -68,7 +68,7 @@ def main():
     args = parse_args()
 
     args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
-    args.output_path_dir = os.path.join(args.base_results_dir,args.experiment_name)
+    args.output_path_dir = os.path.join(args.output_path_dir,args.experiment_name)
     
     if(not os.path.exists(args.output_path_dir)):
         print('creating directories in ' + args.output_path_dir)
