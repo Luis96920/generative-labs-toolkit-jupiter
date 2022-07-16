@@ -32,7 +32,7 @@ def parse_args():
     # Experiment parameters
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
-    parser.add_argument('--args.display_step', type=int, default=100, help='Number of step to display images.')
+    parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
 
     
     # Output paths
