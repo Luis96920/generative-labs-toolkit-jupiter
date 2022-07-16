@@ -68,14 +68,14 @@ def main():
     args = parse_args()
 
     args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
-    args.base_results_dir = os.path.join(args.base_results_dir,args.experiment_name)
+    args.output_path_dir = os.path.join(args.base_results_dir,args.experiment_name)
     
-    if(not os.path.exists(args.base_results_dir)):
-        print('creating directories in ' + args.base_results_dir)
-        os.makedirs(args.base_results_dir)
-        os.makedirs(os.path.join(args.base_results_dir, args.saved_images_path))
-        os.makedirs(os.path.join(args.base_results_dir,"History"))
-        os.makedirs(os.path.join(args.base_results_dir,"Saved_Models"))
+    if(not os.path.exists(args.output_path_dir)):
+        print('creating directories in ' + args.output_path_dir)
+        os.makedirs(args.output_path_dir)
+        os.makedirs(os.path.join(args.output_path_dir, args.saved_images_path))
+        os.makedirs(os.path.join(args.output_path_dir,"History"))
+        os.makedirs(os.path.join(args.output_path_dir,"Saved_Models"))
 
     """
     if(args.img_2_bone):
