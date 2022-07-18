@@ -146,6 +146,7 @@ def train_networks(args):
     
     if args.device not in {'cuda', 'cpu'}:
         args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print_device_name(args.device)
     
     train_dir = [{
         'path_root': args.input_path_dir, #
@@ -193,8 +194,6 @@ def train_networks(args):
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
 
     ### Training
-    if args.device=='cuda':
-        print_device_name()
 
     # Phase 1: Low Resolution
     #######################################################################

@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 
-def print_device_name():
-  cuda = torch.device('cuda:0')
-  torch.cuda.set_device(0)
-  return print('Exp is running in {} No.{}'.format(
+def print_device_name(device):
+  print('Using device:', device)
+  if device.type == 'cuda':
+    print('Exp is running in {} No.{}'.format(
       torch.cuda.get_device_name(torch.cuda.current_device()), torch.cuda.current_device()))
 
 
