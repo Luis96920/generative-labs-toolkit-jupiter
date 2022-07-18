@@ -41,8 +41,9 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
     epoch_run=0
 
     # recover from checkpoint
-    if(args.continue_training):
-        cp = torch.load(os.path.join(saved_model_path, 'bkp_model_ft.pth'))
+    path_bkp_model = os.path.join(saved_model_path, 'bkp_model_ft.pth')
+    if(args.continue_training and os.path.exists(path_bkp_model)):
+        cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
         encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
         generator.load_state_dict(cp['generator_state_dict'])
@@ -128,7 +129,7 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
                 # Scheduler states
                 'g_scheduler_state_dict': g_scheduler.state_dict(),
                 'd_scheduler_state_dict': d_scheduler.state_dict(),
-            }, os.path.join(saved_model_path, 'bkp_model_ft.pth'))
+            }, path_bkp_model)
 
 
 def weights_init(m):
