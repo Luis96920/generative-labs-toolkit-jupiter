@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir') 
 
     # Training parameters
-    parser.add_argument('--num_epochs', type=int, default=200, help='The number of epochs')   
+    parser.add_argument('--epochs', type=int, default=200, help='The number of epochs')   
     parser.add_argument('--decay_after', type=int, default=200, help='Number of epochs with constant lr')   
     parser.add_argument('--lr', type=int, default=0.0005, help='Learning rate')   
     parser.add_argument('--beta_1', type=int, default=0.5, help='Parameter beta_1 for Adam optimizer') 
@@ -35,6 +35,8 @@ def parse_args():
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
     parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=True, help="Continue training allows to resume training.")
+    parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
+
     # Output paths
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
     parser.add_argument('--saved_images_path', type=str, default="Images", help='Folder name for save images during training')
@@ -69,8 +71,8 @@ def main():
     args = parse_args()
 
     args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
-    args.output_path_dir = os.path.join(args.output_path_dir,args.experiment_name)
-    
+    args.output_path_dir = os.path.join(args.output_path_dir,args.experiment_name) 
+   
     if(not os.path.exists(args.output_path_dir)):
         print('creating directories in ' + args.output_path_dir)
         os.makedirs(args.output_path_dir)
@@ -79,7 +81,6 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
 
-    print(args.continue_training)
     train_networks(args)
     print("done training")
 
