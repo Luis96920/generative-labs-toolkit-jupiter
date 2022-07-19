@@ -66,7 +66,8 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
           assert os.path.isdir(abs_path)
           for root, _, files in os.walk(abs_path):
             for f in files:
-              file_name = f.split('.')[0] # keep name, remove .jpg or .png
+              if f.split('.')[1] in ('jpg', 'jpeg', 'png'):
+                file_name = f.split('.')[0] # keep name, remove .jpg or .png
 
               if file_name not in self.examples.keys():
                 self.examples[file_name] = {}
