@@ -33,7 +33,7 @@ def save_tensor_images(image_tensor_fake, image_tensor_real, epoch, cur_step, pa
     output_path = os.path.join(path,f"epoch_{epoch:04d}_step_{cur_step:04d}.jpg")
     fig.savefig(output_path)
     #plt.savefig()
-    #plt.close()
+    fig.close()
 
 
 def str2bool(v):

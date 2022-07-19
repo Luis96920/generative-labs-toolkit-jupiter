@@ -21,7 +21,7 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, args, desc=''):
+def train(dataloader, models, optimizers, schedulers, args, step='step1', desc=''):
 
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
@@ -36,8 +36,8 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
     epoch_run=0
 
     # recover from checkpoint
-    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft.pth')
-    if(args.continue_training and os.path.exists(path_bkp_model)):
+    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft' + step + '.pth')
+    if(args.resume_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
         encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
@@ -202,6 +202,7 @@ def train_networks(args):
             [g1_optimizer, d1_optimizer],
             [g1_scheduler, d1_scheduler],
             args,
+            step='step1',
             desc='Epoch loop G1',
         )
 
@@ -232,5 +233,6 @@ def train_networks(args):
         [g2_optimizer, d2_optimizer],
         [g2_scheduler, d2_scheduler],
         args,
+        step='step2',
         desc='Epoch loop G2',
     )
