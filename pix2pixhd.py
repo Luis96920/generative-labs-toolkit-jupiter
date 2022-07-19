@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
     parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
-    parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training. You'll need to add experiment name args to identify the experiment to recover.")
+    parser.add_argument('--resume_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training. You'll need to add experiment name args to identify the experiment to recover.")
 
     # Output paths
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
@@ -56,7 +56,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if (args.continue_training):
+    if (args.resume_training):
         args.experiment_name = args.experiment_name
         args.low_resolution_finished = torch.load(os.path.join(args.output_path_dir, args.saved_images_path, 'training_status.info'))['low_resolution_finished']
     else:
