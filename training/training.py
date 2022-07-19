@@ -37,6 +37,7 @@ def train(dataloader, models, optimizers, schedulers, args, step='step1', desc='
 
     # recover from checkpoint
     path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft' + step + '.pth')
+    print('Resume training: ' + args.resume_training)
     if(args.resume_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
