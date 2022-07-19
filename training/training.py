@@ -21,7 +21,6 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-#def train(dataloader, models, optimizers, schedulers, device, desc, saved_images_path, saved_model_path, display_step=100, checkpoint=None, verbose=False, epochs=100):
 def train(dataloader, models, optimizers, schedulers, args, desc=''):
 
     encoder, generator, discriminator = models
@@ -30,10 +29,6 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
 
     loss_fn = Loss(device=args.device)
 
-    # output paths
-    saved_images_path = os.path.join(args.output_path_dir, args.saved_images_path)
-    saved_model_path = os.path.join(args.output_path_dir, args.saved_model_path)
-
     # running variables
     cur_step = 0
     mean_g_loss = 0.0
@@ -41,7 +36,7 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
     epoch_run=0
 
     # recover from checkpoint
-    path_bkp_model = os.path.join(saved_model_path, 'bkp_model_ft.pth')
+    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft.pth')
     if(args.continue_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
@@ -96,7 +91,7 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
             if cur_step % args.display_step == 0 and cur_step > 0:
                 print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
                       .format(cur_step, mean_g_loss, mean_d_loss))
-                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch+epoch_run, cur_step, saved_images_path)
+                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch+epoch_run, cur_step, args.saved_images_path)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
             cur_step += 1
@@ -114,7 +109,7 @@ def train(dataloader, models, optimizers, schedulers, args, desc=''):
         d_scheduler.step()
 
         # Save checkpoint
-        if saved_model_path is not None:
+        if args.saved_model_path is not None:
             torch.save({
                 'epoch': epoch + epoch_run + 1,
                 # Networks states
@@ -194,18 +189,23 @@ def train_networks(args):
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
 
     ### Training
+    # output paths
+    args.saved_images_path = os.path.join(args.output_path_dir, args.saved_images_path)
+    args.saved_model_path = os.path.join(args.output_path_dir, args.saved_model_path)
 
     # Phase 1: Low Resolution
     #######################################################################
-    train(
-        dataloader1,
-        [encoder, generator1, discriminator1],
-        [g1_optimizer, d1_optimizer],
-        [g1_scheduler, d1_scheduler],
-        args,
-        desc='Epoch loop G1',
-    )
+    if not args.low_resolution_finished:
+        train(
+            dataloader1,
+            [encoder, generator1, discriminator1],
+            [g1_optimizer, d1_optimizer],
+            [g1_scheduler, d1_scheduler],
+            args,
+            desc='Epoch loop G1',
+        )
 
+    torch.save({'low_resolution_finished': True}, os.path.join(args.saved_model_path, 'training_status.info'))
 
     # Phase 2: High Resolution
     #######################################################################

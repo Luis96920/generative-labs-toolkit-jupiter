@@ -4,7 +4,7 @@ import shutil
 from training.training import train_networks
 from utils.utils import str2bool
 from datetime import datetime
-
+import torch
 
 def parse_args():
     desc = "An autoencoder for pose similarity detection"
@@ -34,8 +34,8 @@ def parse_args():
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
-    parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=True, help="Continue training allows to resume training.")
     parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
+    parser.add_argument('--continue_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training. You'll need to add experiment name args to identify the experiment to recover.")
 
     # Output paths
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
@@ -44,25 +44,11 @@ def parse_args():
 
 
     """ 
-    parser.add_argument('--input_img_data_dir', type=str, default="Image_X/", help='The directory for CSV input data')
-    parser.add_argument('--output_data_dir', type=str, default="CSV_Y/", help='The directory for CSV input data')
-    parser.add_argument('--base_results_dir', type=str, default="/", help='The base directory to hold the results')
-    parser.add_argument('--output_test_csv_dir', type=str, default="CSV/", help='The directory for result csvs')
-    parser.add_argument('--output_test_graph_dir', type=str, default="Graph/", help='The directory for result csvs')
-    parser.add_argument('--saved_model_dir', type=str, default="Saved_Models/", help='The directory for input data')
     parser.add_argument('--history_dir', type=str, default="History/", help='The directory for input data')
-    parser.add_argument('--csv_dims', type=int, default=156, help='The number of csv channels')
     parser.add_argument('--input_channels', type=int, default=2, help='The number of input bone dims')
     parser.add_argument('--output_channels', type=int, default=2, help='The number of input bone dims')
     parser.add_argument('--latent_dim', type=int, default=64, help='the size of the latent dim')
-    parser.add_argument('--print_freq', type=int, default=5, help='How often is the status printed')
-    parser.add_argument('--save_freq', type=int, default=10, help='How often is the model saved')
-    parser.add_argument('--save_best_only', action='store_true')
-    parser.add_argument('--print_csv', action='store_true')
-    parser.add_argument('--continue_training', action='store_true')
-    parser.add_argument('--saved_weights_path', type=str, default="N/A", help='the path of the saved weights')
     parser.add_argument('--notes', type=str, default="N/A", help='A description of the experiment')
-    parser.add_argument('--img_2_bone', action='store_true')
     """
     return parser.parse_args()
 
@@ -70,7 +56,13 @@ def parse_args():
 def main():
     args = parse_args()
 
-    args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
+    if (args.continue_training):
+        args.experiment_name = args.experiment_name
+        args.low_resolution_finished = torch.load(os.path.join(args.output_path_dir, args.saved_images_path, 'training_status.info'))['low_resolution_finished']
+    else:
+        args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
+        args.low_resolution_finished = False
+
     args.output_path_dir = os.path.join(args.output_path_dir,args.experiment_name) 
    
     if(not os.path.exists(args.output_path_dir)):

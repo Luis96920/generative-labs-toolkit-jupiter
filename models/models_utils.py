@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-
+#from torchvision.models import VGG19_Weights
 
 class ResidualBlock(nn.Module):
     """
@@ -112,8 +112,9 @@ class VGG19(nn.Module):
 
     def __init__(self):
         super().__init__()
-        vgg_features = models.vgg19(pretrained=True).features
-
+        vgg_features = models.vgg19(pretrained=False).features
+        #vgg_features = models.vgg19(weights=VGG19_Weights.DEFAULT).features # line above will be deprecated after torchvision 0.15
+        
         self.f1 = nn.Sequential(*[vgg_features[x] for x in range(2)])
         self.f2 = nn.Sequential(*[vgg_features[x] for x in range(2, 7)])
         self.f3 = nn.Sequential(*[vgg_features[x] for x in range(7, 12)])
