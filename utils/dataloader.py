@@ -69,9 +69,9 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
               if f.split('.')[1] in ('jpg', 'jpeg', 'png'):
                 file_name = f.split('.')[0] # keep name, remove .jpg or .png
 
-              if file_name not in self.examples.keys():
-                self.examples[file_name] = {}
-              self.examples[file_name][attr] = root + '/' + f
+                if file_name not in self.examples.keys():
+                    self.examples[file_name] = {}
+                self.examples[file_name][attr] = root + '/' + f
 
     def __getitem__(self, idx):
         example = self.examples[idx]
