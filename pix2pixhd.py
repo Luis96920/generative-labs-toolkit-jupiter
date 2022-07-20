@@ -25,10 +25,10 @@ def parse_args():
     parser.add_argument('--lr', type=int, default=0.0005, help='Learning rate')   
     parser.add_argument('--beta_1', type=int, default=0.5, help='Parameter beta_1 for Adam optimizer') 
     parser.add_argument('--beta_2', type=int, default=0.999, help='Parameter beta_2 for Adam optimizer') 
-    parser.add_argument('--batch_size_1', type=int, default=2, help='The size of batch for step 1 of training.')
-    parser.add_argument('--batch_size_2', type=int, default=2, help='The size of batch for step 2 of training.')
-    parser.add_argument('--target_width_1', type=int, default=1024, help='The size of image for step 1 of training.')
-    parser.add_argument('--target_width_2', type=int, default=1024, help='The size of image for step 1 of training.')
+    parser.add_argument('--batch_size_1', type=int, default=2, help='The size of batch for stage 1 of training.')
+    parser.add_argument('--batch_size_2', type=int, default=2, help='The size of batch for stage 2 of training.')
+    parser.add_argument('--target_width_1', type=int, default=1024, help='The size of image for stage 1 of training.')
+    parser.add_argument('--target_width_2', type=int, default=2048, help='The size of image for stage 2 of training.')
 
     # Experiment parameters
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')

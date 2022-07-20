@@ -175,7 +175,7 @@ def train_networks(args):
 
     ## Phase 2: High Resolution (2048 x 1024)
     dataloader2 = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes, n_inputs=3),
+        SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes, n_inputs=3),
         collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_2, shuffle=True, drop_last=False, pin_memory=True,
     )
     #generator2 = LocalEnhancer(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
@@ -196,6 +196,8 @@ def train_networks(args):
 
     # Phase 1: Low Resolution
     #######################################################################
+    torch.save({'low_resolution_finished': False}, os.path.join(args.saved_model_path, 'training_status.info'))
+    
     if not args.low_resolution_finished:
         train(
             dataloader1,
