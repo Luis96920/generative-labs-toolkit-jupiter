@@ -216,6 +216,10 @@ def train_networks(args):
     # Update global generator in local enhancer with trained
     generator2.g1 = generator1.g1
 
+    # delete models from GPU for releasing space
+    del discriminator1, g1_optimizer, d1_optimizer, g1_scheduler, d1_scheduler
+    torch.cuda.empty_cache()
+
     # Freeze encoder and wrap to support high-resolution inputs/outputs
     def freeze(encoder):
         encoder.eval()
