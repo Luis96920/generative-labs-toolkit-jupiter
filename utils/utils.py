@@ -11,7 +11,7 @@ def print_device_name(device):
       torch.cuda.get_device_name(torch.cuda.current_device()), torch.cuda.current_device()))
 
 
-def save_tensor_images(image_tensor_fake, image_tensor_real, epoch, cur_step, path):
+def save_tensor_images(image_tensor_fake, image_tensor_real, epoch, stage, cur_step, path):
     '''
     Function for visualizing images: Given a tensor of imagess, number of images, and
     size per image, plots and prints the images in an uniform grid.
@@ -30,7 +30,7 @@ def save_tensor_images(image_tensor_fake, image_tensor_real, epoch, cur_step, pa
     axs[0].imshow(image_fake_grid.permute(1, 2, 0).squeeze())
     axs[1].imshow(image_real_grid.permute(1, 2, 0).squeeze())
 
-    output_path = os.path.join(path,f"epoch_{epoch:04d}_step_{cur_step:04d}.jpg")
+    output_path = os.path.join(path,f"epoch_{epoch:04d}_{stage}_step_{cur_step:04d}.jpg")
     fig.savefig(output_path)
     #plt.savefig()
 

@@ -21,7 +21,7 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, args, step='step1', desc=''):
+def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
 
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
@@ -36,7 +36,7 @@ def train(dataloader, models, optimizers, schedulers, args, step='step1', desc='
     epoch_run=0
 
     # recover from checkpoint
-    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft' + step + '.pth')
+    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_ft' + stage + '.pth')
     print('Resume training: ' + str(args.resume_training))
     if(args.resume_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
@@ -92,7 +92,7 @@ def train(dataloader, models, optimizers, schedulers, args, step='step1', desc='
             if cur_step % args.display_step == 0 and cur_step > 0:
                 print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
                       .format(cur_step, mean_g_loss, mean_d_loss))
-                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch+epoch_run, cur_step, args.saved_images_path)
+                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch+epoch_run, stage, cur_step, args.saved_images_path)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
             cur_step += 1
@@ -203,7 +203,7 @@ def train_networks(args):
             [g1_optimizer, d1_optimizer],
             [g1_scheduler, d1_scheduler],
             args,
-            step='step1',
+            stage='stage1',
             desc='Epoch loop G1',
         )
 
@@ -234,6 +234,6 @@ def train_networks(args):
         [g2_optimizer, d2_optimizer],
         [g2_scheduler, d2_scheduler],
         args,
-        step='step2',
+        stage='stage2',
         desc='Epoch loop G2',
     )
