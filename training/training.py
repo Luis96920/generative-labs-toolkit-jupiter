@@ -41,7 +41,7 @@ def train(dataloader, models, optimizers, schedulers, args, step='step1', desc='
     if(args.resume_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
-        encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
+        #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
         generator.load_state_dict(cp['generator_state_dict'])
         discriminator.load_state_dict(cp['discriminator_state_dict'])
         #best_model_wts = cp['best_model_wts']
@@ -114,7 +114,7 @@ def train(dataloader, models, optimizers, schedulers, args, step='step1', desc='
             torch.save({
                 'epoch': epoch + epoch_run + 1,
                 # Networks states
-                'encoder_state_dict': encoder.state_dict(),
+                #'encoder_state_dict': encoder.state_dict(),
                 'generator_state_dict': generator.state_dict(),
                 'discriminator_state_dict': discriminator.state_dict(),
                 # Best models states
