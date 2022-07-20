@@ -58,7 +58,7 @@ def main():
 
     if (args.resume_training):
         args.experiment_name = args.experiment_name
-        args.low_resolution_finished = torch.load(os.path.join(args.output_path_dir, args.saved_images_path, 'training_status.info'))['low_resolution_finished']
+        args.low_resolution_finished = torch.load(os.path.join(args.output_path_dir, args.saved_model_path, 'training_status.info'))['low_resolution_finished']
     else:
         args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
         args.low_resolution_finished = False
