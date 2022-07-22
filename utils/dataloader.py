@@ -109,15 +109,17 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
 
     @staticmethod
     def collate_fn(batch):
-        imgs, labels, insts, bounds = [], [], [], []
-        for (x, l, i, b) in batch:
-            imgs.append(x)
+        imgs_i, labels, insts, bounds, imgs_o = [], [], [], [], []
+        for (x, l, i, b, o) in batch:
+            imgs_i.append(x)
             labels.append(l)
             insts.append(i)
             bounds.append(b)
         return (
-            torch.stack(imgs, dim=0),
+            torch.stack(imgs_i, dim=0),
             torch.stack(labels, dim=0),
             torch.stack(insts, dim=0),
             torch.stack(bounds, dim=0),
+            torch.stack(imgs_o, dim=0),
+
         )
