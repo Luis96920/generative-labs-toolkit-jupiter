@@ -115,7 +115,7 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
         # Load optional label images
         if 'label_map' in self.paths['path_inputs'].keys():
             label = Image.open(example['label_map']).convert('L') # semantic label map: (512, 1024)
-            label = self.map_transforms(label).long() * 255
+            label = self.map_transforms(label)#.long() * 255
 
             # Convert labels to one-hot vectors
             #label = torch.zeros(self.n_classes, img.shape[1], img.shape[2]).scatter_(0, label, 1.0).to(img.dtype)
