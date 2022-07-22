@@ -76,17 +76,20 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         example = self.examples[idx]
 
-        # Load image and maps
+        # Load input image and maps
         img_i = Image.open(example['input_img']).convert('RGB')  # color image: (3, 512, 1024)
-        img_o = Image.open(example['output_img']).convert('RGB')  # color image: (3, 512, 1024)
         inst = Image.open(example['inst_map']).convert('L')   # instance map: (512, 1024)
         label = Image.open(example['label_map']).convert('L') # semantic label map: (512, 1024)
 
+        # Load output image
+        img_o = Image.open(example['output_img']).convert('RGB')  # color image: (3, 512, 1024)
+
         # Apply corresponding transforms
         img_i = self.img_transforms(img_i)
-        img_o = self.img_transforms(img_o)
         inst = self.map_transforms(inst)
         label = self.map_transforms(label).long() * 255
+
+        img_o = self.img_transforms(img_o)
 
         # Convert labels to one-hot vectors
         #label = torch.zeros(self.n_classes, img.shape[1], img.shape[2]).scatter_(0, label, 1.0).to(img.dtype)
