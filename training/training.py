@@ -145,10 +145,15 @@ def train_networks(args):
         args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print_device_name(args.device)
     
-    train_dir = [{
-        'path_root': args.input_path_dir, #
-        'path_inputs': [(args.input_img_dir, 'input_img'), (args.input_inst_dir, 'inst_map'), (args.input_label_dir, 'label_map'), (args.input_img_dir, 'output_img')]
-        }]
+    train_dir = {
+        'path_root': args.input_path_dir, 
+        'path_inputs': {
+            'input_img': args.input_img_dir,
+            'inst_map': args.input_inst_dir,
+            'label_map': args.input_label_dir, 
+            'output_img': args.output_img_dir
+            }
+        }
 
     # functions
     def lr_lambda(epoch):
@@ -158,15 +163,15 @@ def train_networks(args):
     ### Init train
     ## Phase 1: Low Resolution (1024 x 512)
     dataloader1 = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes, n_inputs=4),
+        SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes),
         collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_1, shuffle=True, drop_last=False, pin_memory=True,
     )
     encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
     #generator1 = GlobalGenerator(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator1 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels, n_discriminators=2).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
-    generator1 = GlobalGenerator(1 + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
-    discriminator1 = MultiscaleDiscriminator(1 + 1 + rgb_channels, n_discriminators=2).to(args.device).apply(weights_init)
+    generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+    discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
 
     g1_optimizer = torch.optim.Adam(list(generator1.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d1_optimizer = torch.optim.Adam(list(discriminator1.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
@@ -176,14 +181,14 @@ def train_networks(args):
 
     ## Phase 2: High Resolution (2048 x 1024)
     dataloader2 = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes, n_inputs=4),
+        SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes),
         collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_2, shuffle=True, drop_last=False, pin_memory=True,
     )
     #generator2 = LocalEnhancer(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator2 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
-    generator2 = LocalEnhancer(1 + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
-    discriminator2 = MultiscaleDiscriminator(1 + 1 + rgb_channels).to(args.device).apply(weights_init)
+    generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+    discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
 
     g2_optimizer = torch.optim.Adam(list(generator2.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d2_optimizer = torch.optim.Adam(list(discriminator2.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))

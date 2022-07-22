@@ -113,7 +113,11 @@ class VGG19(nn.Module):
     def __init__(self):
         super().__init__()
         #vgg_features = models.vgg19(pretrained=False).features
-        vgg_features = models.vgg19(weights=VGG19_Weights.DEFAULT).features # line above will be deprecated after torchvision 0.15
+        try:
+            vgg_features = models.vgg19(weights=VGG19_Weights.DEFAULT).features # line above will be deprecated after torchvision 0.15
+        except:
+            vgg_features = models.vgg19().features 
+            print('Warning: pretrained vgg19 could not be downloaded')
         
         self.f1 = nn.Sequential(*[vgg_features[x] for x in range(2)])
         self.f2 = nn.Sequential(*[vgg_features[x] for x in range(2, 7)])

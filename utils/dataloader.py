@@ -23,24 +23,21 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
         n_classes: the number of object classes, a scalar
     '''
 
-    def __init__(self, paths, target_width=1024, n_classes=2, n_inputs=2):
+    def __init__(self, paths, target_width=1024, n_classes=2):
         super().__init__()
 
         self.n_classes = n_classes
+        self.paths = paths
+        self.paths['path_inputs'] = {key: val for key, val in self.paths['path_inputs'].items() if os.path.isdir(os.path.join(self.paths['path_root'], val))}
+        self.n_inputs = len(self.paths['path_inputs'])
+
 
         # Collect list of examples
         self.examples = {}
-        if type(paths) == str:
-            self.load_examples_from_dir(paths)
-        elif type(paths) == list:
-            for path in paths:
-                self.load_examples_from_dir(path)
-        else:
-            raise ValueError('`paths` should be a single path or list of paths')
-
+        self.load_examples_from_dir()
         self.examples = list(self.examples.values())
-        self.examples=[example for example in self.examples if len(example)==n_inputs]
-        assert all(len(example) == n_inputs for example in self.examples)
+        self.examples=[example for example in self.examples if len(example)==self.n_inputs]
+        assert all(len(example) == self.n_inputs for example in self.examples)
 
         # Initialize transforms for the real color image
         self.img_transforms = transforms.Compose([
@@ -56,11 +53,25 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
             transforms.Lambda(lambda img: np.array(img)),
             transforms.ToTensor(),
         ])
+         
 
-    def load_examples_from_dir(self, paths):
+    def load_examples_from_dir(self):
         '''
         Given a folder of examples, this function returns a list of paired examples.
         '''
+        for attr, path_input  in self.paths['path_inputs'].items():
+            abs_path = os.path.join(self.paths['path_root'], path_input)
+            assert os.path.isdir(abs_path)
+            for root, _, files in os.walk(abs_path):
+                for f in files:
+                    if f.split('.')[1] in ('jpg', 'jpeg', 'png'):
+                        file_name = f.split('.')[0] # keep name, remove .jpg or .png
+
+                        if file_name not in self.examples.keys():
+                            self.examples[file_name] = {}
+                        self.examples[file_name][attr] = root + '/' + f
+
+        """
         for path_input, attr in paths['path_inputs']:
           abs_path = os.path.join(paths['path_root'], path_input)
           assert os.path.isdir(abs_path)
@@ -72,36 +83,45 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
                 if file_name not in self.examples.keys():
                     self.examples[file_name] = {}
                 self.examples[file_name][attr] = root + '/' + f
-
+        """
+    
     def __getitem__(self, idx):
         example = self.examples[idx]
 
-        # Load input image and maps
+        # Load input and output images
         img_i = Image.open(example['input_img']).convert('RGB')  # color image: (3, 512, 1024)
-        inst = Image.open(example['inst_map']).convert('L')   # instance map: (512, 1024)
-        label = Image.open(example['label_map']).convert('L') # semantic label map: (512, 1024)
-
-        # Load output image
         img_o = Image.open(example['output_img']).convert('RGB')  # color image: (3, 512, 1024)
 
         # Apply corresponding transforms
         img_i = self.img_transforms(img_i)
-        inst = self.map_transforms(inst)
-        label = self.map_transforms(label).long() * 255
-
         img_o = self.img_transforms(img_o)
 
-        # Convert labels to one-hot vectors
-        #label = torch.zeros(self.n_classes, img.shape[1], img.shape[2]).scatter_(0, label, 1.0).to(img.dtype)
+        # Load optional inst images
+        if 'inst_map' in self.paths['path_inputs'].keys():
+            inst = Image.open(example['inst_map']).convert('L')   # instance map: (512, 1024)
+            inst = self.map_transforms(inst)
 
-        # Convert instance map to instance boundary map
-        bound = torch.ByteTensor(inst.shape).zero_()
-        bound[:, :, 1:] = bound[:, :, 1:] | (inst[:, :, 1:] != inst[:, :, :-1])
-        bound[:, :, :-1] = bound[:, :, :-1] | (inst[:, :, 1:] != inst[:, :, :-1])
-        bound[:, 1:, :] = bound[:, 1:, :] | (inst[:, 1:, :] != inst[:, :-1, :])
-        bound[:, :-1, :] = bound[:, :-1, :] | (inst[:, 1:, :] != inst[:, :-1, :])
-        bound = bound.to(img_i.dtype)
+            # Convert instance map to instance boundary map
+            bound = torch.ByteTensor(inst.shape).zero_()
+            bound[:, :, 1:] = bound[:, :, 1:] | (inst[:, :, 1:] != inst[:, :, :-1])
+            bound[:, :, :-1] = bound[:, :, :-1] | (inst[:, :, 1:] != inst[:, :, :-1])
+            bound[:, 1:, :] = bound[:, 1:, :] | (inst[:, 1:, :] != inst[:, :-1, :])
+            bound[:, :-1, :] = bound[:, :-1, :] | (inst[:, 1:, :] != inst[:, :-1, :])
+            bound = bound.to(img_i.dtype)
+        else:   
+            inst = torch.zeros(0, img_i.shape[1], img_i.shape[2])
+            bound = torch.zeros(0, img_i.shape[1], img_i.shape[2])
 
+        # Load optional label images
+        if 'label_map' in self.paths['path_inputs'].keys():
+            label = Image.open(example['label_map']).convert('L') # semantic label map: (512, 1024)
+            label = self.map_transforms(label).long() * 255
+
+            # Convert labels to one-hot vectors
+            #label = torch.zeros(self.n_classes, img.shape[1], img.shape[2]).scatter_(0, label, 1.0).to(img.dtype)
+        else:   
+            label = torch.zeros(0, img_i.shape[1], img_i.shape[2])
+ 
         return (img_i, label, inst, bound, img_o)
 
     def __len__(self):
@@ -124,3 +144,13 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
             torch.stack(imgs_o, dim=0),
 
         )
+
+    def get_input_size_g(self):
+        img_i, label, inst, bound, img_o = self.__getitem__(1)
+        return img_i.shape[0] + label.shape[0] + bound.shape[0]
+
+    def get_input_size_d(self):
+        img_i, label, inst, bound, img_o = self.__getitem__(1)
+        return bound.shape[0] + label.shape[0] + img_o.shape[0]
+ 
+    # it's remaining input_size_encoder because we're not using that for now

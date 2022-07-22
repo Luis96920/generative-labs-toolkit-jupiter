@@ -68,15 +68,15 @@ class Loss(nn.Module):
         '''
         #feature_map = encoder(x_real, instance_map)
         #x_fake = generator(torch.cat((label_map, boundary_map, feature_map), dim=1))
-        img_o_fake = generator(torch.cat((img_i,instance_map, boundary_map), dim=1))
+        img_o_fake = generator(torch.cat((img_i,label_map, boundary_map), dim=1))
 
         # Get necessary outputs for loss/backprop for both generator and discriminator
         #fake_preds_for_g = discriminator(torch.cat((label_map, boundary_map, x_fake), dim=1))
         #fake_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_fake.detach()), dim=1))
         #real_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_real.detach()), dim=1))
-        fake_preds_for_g = discriminator(torch.cat((boundary_map,instance_map, img_o_fake), dim=1))
-        fake_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, img_o_fake.detach()), dim=1))
-        real_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, img_o_real.detach()), dim=1))
+        fake_preds_for_g = discriminator(torch.cat((boundary_map,label_map, img_o_fake), dim=1))
+        fake_preds_for_d = discriminator(torch.cat((boundary_map,label_map, img_o_fake.detach()), dim=1))
+        real_preds_for_d = discriminator(torch.cat((boundary_map,label_map, img_o_real.detach()), dim=1))
 
         g_loss = (
             self.lambda0 * self.adv_loss(fake_preds_for_g, True) + \

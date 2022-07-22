@@ -14,10 +14,11 @@ def parse_args():
     # Dataset parameters and input paths
     parser.add_argument('--n_classes', type=int, default=2, help='Number of segmented instances in the dataset. Eg. Character and background')
     parser.add_argument('--n_features', type=int, default=3, help='Number of channels. Eg. 3 for RGB')
-    parser.add_argument('--input_path_dir', type=str, default="/content/drive/MyDrive/GenerativeLabs/dataset/sword_sorcery_data_for_ramiro/paired_data", help='Path root where inputs are located. By default it will contain 3 subfolders: img, inst, label')
-    parser.add_argument('--input_img_dir', type=str, default="02_output", help='Folder name for original images located in input_path_dir')
-    parser.add_argument('--input_label_dir', type=str, default="01_segmented_input", help='Folder name for labeled images located in input_path_dir')        
-    parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for instances images located in input_path_dir') 
+    parser.add_argument('--input_path_dir', type=str, default="/Users/ramirocasal/Documents/Datasets/sword_sorcery_data_for_ramiro/test_dataset", help='Path root where inputs are located. By default it will contain 3 subfolders: img, inst, label')
+    parser.add_argument('--input_img_dir', type=str, default="02_output", help='Folder name for input images located in input_path_dir')
+    parser.add_argument('--output_img_dir', type=str, default="02_output", help='Folder name for output images located in input_path_dir')
+    parser.add_argument('--input_label_dir', type=str, default="--nodir--", help='Folder name for optional labeled images located in input_path_dir')        # 01_segmented_input
+    parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for optional instances images located in input_path_dir') 
 
     # Training parameters
     parser.add_argument('--epochs', type=int, default=200, help='The number of epochs')   
