@@ -62,30 +62,30 @@ class Loss(nn.Module):
             vgg_loss += weight * F.l1_loss(real.detach(), fake)
         return vgg_loss
 
-    def forward(self, x_real, label_map, instance_map, boundary_map, encoder, generator, discriminator):
+    def forward(self, img_i, label_map, instance_map, boundary_map, img_o_real, encoder, generator, discriminator):
         '''
         Function that computes the forward pass and total loss for generator and discriminator.
         '''
         #feature_map = encoder(x_real, instance_map)
         #x_fake = generator(torch.cat((label_map, boundary_map, feature_map), dim=1))
-        x_fake = generator(torch.cat((x_real,instance_map, boundary_map), dim=1))
+        img_o_fake = generator(torch.cat((img_i,instance_map, boundary_map), dim=1))
 
         # Get necessary outputs for loss/backprop for both generator and discriminator
         #fake_preds_for_g = discriminator(torch.cat((label_map, boundary_map, x_fake), dim=1))
         #fake_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_fake.detach()), dim=1))
         #real_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_real.detach()), dim=1))
-        fake_preds_for_g = discriminator(torch.cat((boundary_map,instance_map, x_fake), dim=1))
-        fake_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, x_fake.detach()), dim=1))
-        real_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, x_real.detach()), dim=1))
+        fake_preds_for_g = discriminator(torch.cat((boundary_map,instance_map, img_o_fake), dim=1))
+        fake_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, img_o_fake.detach()), dim=1))
+        real_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, img_o_real.detach()), dim=1))
 
         g_loss = (
             self.lambda0 * self.adv_loss(fake_preds_for_g, True) + \
             self.lambda1 * self.fm_loss(real_preds_for_d, fake_preds_for_g) / discriminator.n_discriminators + \
-            self.lambda2 * self.vgg_loss(x_fake, x_real)
+            self.lambda2 * self.vgg_loss(img_o_fake, img_o_real)
         )
         d_loss = 0.5 * (
             self.adv_loss(real_preds_for_d, True) + \
             self.adv_loss(fake_preds_for_d, False)
         )
 
-        return g_loss, d_loss, x_fake.detach()
+        return g_loss, d_loss, img_o_fake.detach()

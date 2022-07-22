@@ -77,12 +77,14 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
         example = self.examples[idx]
 
         # Load image and maps
-        img = Image.open(example['orig_img']).convert('RGB')  # color image: (3, 512, 1024)
+        img_i = Image.open(example['input_img']).convert('RGB')  # color image: (3, 512, 1024)
+        img_o = Image.open(example['output_img']).convert('RGB')  # color image: (3, 512, 1024)
         inst = Image.open(example['inst_map']).convert('L')   # instance map: (512, 1024)
         label = Image.open(example['label_map']).convert('L') # semantic label map: (512, 1024)
 
         # Apply corresponding transforms
-        img = self.img_transforms(img)
+        img_i = self.img_transforms(img_i)
+        img_o = self.img_transforms(img_o)
         inst = self.map_transforms(inst)
         label = self.map_transforms(label).long() * 255
 
@@ -95,9 +97,9 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
         bound[:, :, :-1] = bound[:, :, :-1] | (inst[:, :, 1:] != inst[:, :, :-1])
         bound[:, 1:, :] = bound[:, 1:, :] | (inst[:, 1:, :] != inst[:, :-1, :])
         bound[:, :-1, :] = bound[:, :-1, :] | (inst[:, 1:, :] != inst[:, :-1, :])
-        bound = bound.to(img.dtype)
+        bound = bound.to(img_i.dtype)
 
-        return (img, label, inst, bound)
+        return (img_i, label, inst, bound, img_o)
 
     def __len__(self):
         return len(self.examples)

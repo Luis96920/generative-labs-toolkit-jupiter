@@ -55,11 +55,12 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
         # Training epoch
         # time
         since_load = time.time()
-        for (x_real, labels, insts, bounds) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
-            x_real = x_real.to(args.device)
+        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
+            img_i = img_i.to(args.device)
             labels = labels.to(args.device)
             insts = insts.to(args.device)
             bounds = bounds.to(args.device)
+            img_o = img_o.to(args.device)
 
             # time
             time_elapsed_load = time.time() - since_load
@@ -70,12 +71,12 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
             # and use NVIDIA apex for mixed/half precision training
             if has_autocast:
                 with torch.cuda.amp.autocast(enabled=(args.device=='cuda')):
-                    g_loss, d_loss, x_fake = loss_fn(
-                        x_real, labels, insts, bounds, encoder, generator, discriminator
+                    g_loss, d_loss, img_o_fake = loss_fn(
+                        img_i, labels, insts, bounds, img_o, encoder, generator, discriminator
                     )
             else:
-                g_loss, d_loss, x_fake = loss_fn(
-                    x_real, labels, insts, bounds, encoder, generator, discriminator
+                g_loss, d_loss, img_o_fake = loss_fn(
+                    img_i, labels, insts, bounds, img_o, encoder, generator, discriminator
                 )
 
             g_optimizer.zero_grad()
@@ -92,7 +93,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
             if cur_step % args.display_step == 0 and cur_step > 0:
                 print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
                       .format(cur_step, mean_g_loss, mean_d_loss))
-                save_tensor_images(x_fake.to(x_real.dtype), x_real, epoch+epoch_run, stage, cur_step, args.saved_images_path)
+                save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
             cur_step += 1
@@ -146,7 +147,7 @@ def train_networks(args):
     
     train_dir = [{
         'path_root': args.input_path_dir, #
-        'path_inputs': [(args.input_img_dir, 'orig_img'), (args.input_inst_dir, 'inst_map'), (args.input_label_dir, 'label_map')]
+        'path_inputs': [(args.input_img_dir, 'input_img'), (args.input_inst_dir, 'inst_map'), (args.input_label_dir, 'label_map'), (args.input_img_dir, 'output_img')]
         }]
 
     # functions
