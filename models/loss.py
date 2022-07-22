@@ -72,10 +72,8 @@ class Loss(nn.Module):
 
         # Get necessary outputs for loss/backprop for both generator and discriminator
         #fake_preds_for_g = discriminator(torch.cat((label_map, boundary_map, x_fake), dim=1))
-        #fake_preds_for_g = discriminator(torch.cat((label_map, boundary_map, x_fake), dim=1))
         #fake_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_fake.detach()), dim=1))
         #real_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_real.detach()), dim=1))
-        fake_preds_for_g = discriminator(torch.cat((boundary_map,instance_map, x_fake), dim=1))
         fake_preds_for_g = discriminator(torch.cat((boundary_map,instance_map, x_fake), dim=1))
         fake_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, x_fake.detach()), dim=1))
         real_preds_for_d = discriminator(torch.cat((boundary_map,instance_map, x_real.detach()), dim=1))

@@ -49,7 +49,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
         d_optimizer.load_state_dict(cp['d_optimizer_state_dict'])
         g_scheduler.load_state_dict(cp['g_scheduler_state_dict'])     
         d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
-        print('Resuming script in epoch {}.'.format(epoch_run))     
+        print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
     for epoch in tqdm(range(args.epochs-epoch_run), desc=desc, leave=True):
         # Training epoch
