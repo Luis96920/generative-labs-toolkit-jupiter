@@ -115,6 +115,7 @@ class SwordSorceryDataset(torch.utils.data.Dataset):
             labels.append(l)
             insts.append(i)
             bounds.append(b)
+            imgs_o.append(o)
         return (
             torch.stack(imgs_i, dim=0),
             torch.stack(labels, dim=0),
