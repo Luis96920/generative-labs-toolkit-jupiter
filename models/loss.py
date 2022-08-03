@@ -25,7 +25,7 @@ def fm_loss(real_preds, fake_preds):
             fm_loss += F.l1_loss(real_feature.detach(), fake_feature)
     return fm_loss
 
-class vgg_loss(nn.Module):
+class VGG_Loss(nn.Module):
     '''
     Loss Class
     Implements composite loss for GauGAN
@@ -55,9 +55,8 @@ class vgg_loss(nn.Module):
         return vgg_loss
 
 
-def gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o_real, n_discriminators, lambda1=10., lambda2=10., norm_weight_to_one=True):
-
-    vgg_loss = vgg_loss()
+def gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o_real, n_discriminators, vgg_l, lambda1=10., lambda2=10., norm_weight_to_one=True):
+    
     lambda0 = 1.0
     # Keep ratio of composite loss, but scale down max to 1.0
     scale = max(lambda0, lambda1, lambda2) if norm_weight_to_one else 1.0
@@ -69,7 +68,7 @@ def gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o_real, n_discr
     g_loss = (
         lambda0 * adv_loss(fake_preds_for_g, True) + \
         lambda1 * fm_loss(real_preds_for_d, fake_preds_for_g) / n_discriminators + \
-        lambda2 * vgg_loss(img_o_fake, img_o_real)
+        lambda2 * vgg_l(img_o_fake, img_o_real)
     )
 
     return g_loss

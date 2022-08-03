@@ -9,7 +9,7 @@ import os
 
 from models.discriminators import MultiscaleDiscriminator
 from models.generators import GlobalGenerator, LocalEnhancer
-from models.loss import gen_loss, den_loss
+from models.loss import gen_loss, den_loss, VGG_Loss
 from models.models_utils import Encoder
 from utils.dataloader import SwordSorceryDataset
 from utils.utils import print_device_name, save_tensor_images
@@ -157,6 +157,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     g_scheduler, d_scheduler = schedulers
 
     #loss_fn = Loss(device=args.device)
+    vgg_loss = VGG_Loss(device=args.device)
 
     # running variables
     cur_step = 0
@@ -203,14 +204,14 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
                     img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
                         img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
 
-                    g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators)
+                    g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
                     d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
                     img_o_fake = img_o_fake.detach()
             else:
                 img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
                     img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
 
-                g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators)
+                g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
                 d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
                 img_o_fake = img_o_fake.detach()
 
