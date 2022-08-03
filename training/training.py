@@ -291,7 +291,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     config['schedulers']=schedulers
     config['args']=args
     config['lr']=args.lr
-    config['lr']=args.lr
+    config['batch_size']=args.batch_size_1
 
 
     ray.init()
@@ -299,6 +299,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     trainer = TorchTrainer(
         training_operator_cls=Pix2PixHDOperator,
         num_workers=1,
+        cofig=config,
         use_gpu=True
     )
 
