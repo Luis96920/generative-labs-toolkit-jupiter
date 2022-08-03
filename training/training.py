@@ -299,7 +299,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     trainer = TorchTrainer(
         training_operator_cls=Pix2PixHDOperator,
         num_workers=1,
-        cofig=config,
+        config=config,
         use_gpu=True
     )
 
