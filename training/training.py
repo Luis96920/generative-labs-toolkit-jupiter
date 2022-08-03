@@ -9,10 +9,14 @@ import os
 
 from models.discriminators import MultiscaleDiscriminator
 from models.generators import GlobalGenerator, LocalEnhancer
-from models.loss import Loss
+from models.loss import gen_loss, den_loss
 from models.models_utils import Encoder
 from utils.dataloader import SwordSorceryDataset
 from utils.utils import print_device_name, save_tensor_images
+
+import ray
+from ray.util.sgd.torch import TorchTrainer
+from ray.util.sgd.torch import TrainingOperator
 
 # Parse torch version for autocast
 # ######################################################
@@ -21,122 +25,7 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
-
-    encoder, generator, discriminator = models
-    g_optimizer, d_optimizer = optimizers
-    g_scheduler, d_scheduler = schedulers
-
-    loss_fn = Loss(device=args.device)
-
-    # running variables
-    cur_step = 0
-    mean_g_loss = 0.0
-    mean_d_loss = 0.0
-    epoch_run=0
-
-    # recover from checkpoint
-    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_' + stage + '.pth')
-    print('Resume training: ' + str(args.resume_training))
-    if(args.resume_training and os.path.exists(path_bkp_model)):
-        cp = torch.load(path_bkp_model)
-        epoch_run = cp['epoch']
-        #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
-        generator.load_state_dict(cp['generator_state_dict'])
-        discriminator.load_state_dict(cp['discriminator_state_dict'])
-        #best_model_wts = cp['best_model_wts']
-        g_optimizer.load_state_dict(cp['g_optimizer_state_dict'])        
-        d_optimizer.load_state_dict(cp['d_optimizer_state_dict'])
-        g_scheduler.load_state_dict(cp['g_scheduler_state_dict'])     
-        d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
-        print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
-
-    for epoch in tqdm(range(args.epochs-epoch_run), desc=desc, leave=True):
-        # Training epoch
-        # time
-        since_load = time.time()
-        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
-            img_i = img_i.to(args.device)
-            labels = labels.to(args.device)
-            insts = insts.to(args.device)
-            bounds = bounds.to(args.device)
-            img_o = img_o.to(args.device)
-
-            # time
-            time_elapsed_load = time.time() - since_load
-            since_training = time.time()
-
-            # Enable autocast to FP16 tensors (new feature since torch==1.6.0)
-            # If you're running older versions of torch, comment this out
-            # and use NVIDIA apex for mixed/half precision training
-            if has_autocast:
-                with torch.cuda.amp.autocast(enabled=(args.device=='cuda')):
-                    g_loss, d_loss, img_o_fake = loss_fn(
-                        img_i, labels, insts, bounds, img_o, encoder, generator, discriminator
-                    )
-            else:
-                g_loss, d_loss, img_o_fake = loss_fn(
-                    img_i, labels, insts, bounds, img_o, encoder, generator, discriminator
-                )
-
-            g_optimizer.zero_grad()
-            g_loss.backward()
-            g_optimizer.step()
-
-            d_optimizer.zero_grad()
-            d_loss.backward()
-            d_optimizer.step()
-
-            mean_g_loss += g_loss.item() / args.display_step
-            mean_d_loss += d_loss.item() / args.display_step
-
-            if cur_step % args.display_step == 0 and cur_step > 0:
-                print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
-                      .format(cur_step, mean_g_loss, mean_d_loss))
-                save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
-                mean_g_loss = 0.0
-                mean_d_loss = 0.0
-            cur_step += 1
-
-            # time 
-            time_elapsed_training = time.time() - since_training
-            since_load = time.time()
-            if args.verbose:
-                print('Loading images complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
-                time_elapsed_load // 60, time_elapsed_load % 60, 60*time_elapsed_load % 60))
-                print('Training complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
-                time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
-
-        g_scheduler.step()
-        d_scheduler.step()
-
-        # Save checkpoint
-        if args.saved_model_path is not None:
-            torch.save({
-                'epoch': epoch + epoch_run + 1,
-                # Networks states
-                #'encoder_state_dict': encoder.state_dict(),
-                'generator_state_dict': generator.state_dict(),
-                'discriminator_state_dict': discriminator.state_dict(),
-                # Best models states
-                # ver! best model and best kpi
-                # Optimizer states
-                'g_optimizer_state_dict': g_optimizer.state_dict(),
-                'd_optimizer_state_dict': d_optimizer.state_dict(),
-                # Scheduler states
-                'g_scheduler_state_dict': g_scheduler.state_dict(),
-                'd_scheduler_state_dict': d_scheduler.state_dict(),
-            }, path_bkp_model)
-
-
-def weights_init(m):
-    ''' Function for initializing all model weights '''
-    if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        nn.init.normal_(m.weight, 0., 0.02)
-
-
 def train_networks(args):
-
     # init params
     n_classes = args.n_classes                  # total number of object classes
     rgb_channels = n_features = args.n_features       
@@ -195,6 +84,16 @@ def train_networks(args):
     g2_scheduler = torch.optim.lr_scheduler.LambdaLR(g2_optimizer, lr_lambda)
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
 
+    ### Distribution with Ray
+    CustomTrainingOperator = TrainingOperator.from_creators(
+        model_creator=ResNet18, # A function that returns a nn.Module
+        optimizer_creator=optimizer_creator, # A function that returns an optimizer
+        data_creator=cifar_creator, # A function that returns dataloaders
+        loss_creator=torch.nn.CrossEntropyLoss  # A loss function
+        )
+
+    ray.init()
+
     ### Training
     # output paths
     args.saved_images_path = os.path.join(args.output_path_dir, args.saved_images_path)
@@ -249,3 +148,145 @@ def train_networks(args):
         stage='stage2',
         desc='Epoch loop G2',
     )
+
+
+def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+
+    encoder, generator, discriminator = models
+    g_optimizer, d_optimizer = optimizers
+    g_scheduler, d_scheduler = schedulers
+
+    #loss_fn = Loss(device=args.device)
+
+    # running variables
+    cur_step = 0
+    mean_g_loss = 0.0
+    mean_d_loss = 0.0
+    epoch_run=0
+
+    # recover from checkpoint
+    path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_' + stage + '.pth')
+    print('Resume training: ' + str(args.resume_training))
+    if(args.resume_training and os.path.exists(path_bkp_model)):
+        cp = torch.load(path_bkp_model)
+        epoch_run = cp['epoch']
+        #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
+        generator.load_state_dict(cp['generator_state_dict'])
+        discriminator.load_state_dict(cp['discriminator_state_dict'])
+        #best_model_wts = cp['best_model_wts']
+        g_optimizer.load_state_dict(cp['g_optimizer_state_dict'])        
+        d_optimizer.load_state_dict(cp['d_optimizer_state_dict'])
+        g_scheduler.load_state_dict(cp['g_scheduler_state_dict'])     
+        d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
+        print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
+
+    for epoch in tqdm(range(args.epochs-epoch_run), desc=desc, leave=True):
+        # Training epoch
+        # time
+        since_load = time.time()
+        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
+            img_i = img_i.to(args.device)
+            labels = labels.to(args.device)
+            insts = insts.to(args.device)
+            bounds = bounds.to(args.device)
+            img_o = img_o.to(args.device)
+
+            # time
+            time_elapsed_load = time.time() - since_load
+            since_training = time.time()
+
+            # Enable autocast to FP16 tensors (new feature since torch==1.6.0)
+            # If you're running older versions of torch, comment this out
+            # and use NVIDIA apex for mixed/half precision training
+            if has_autocast:
+                with torch.cuda.amp.autocast(enabled=(args.device=='cuda')):
+                    img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
+                        img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
+
+                    g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators)
+                    d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
+                    img_o_fake = img_o_fake.detach()
+            else:
+                img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
+                    img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
+
+                g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators)
+                d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
+                img_o_fake = img_o_fake.detach()
+
+            g_optimizer.zero_grad()
+            g_loss.backward()
+            g_optimizer.step()
+
+            d_optimizer.zero_grad()
+            d_loss.backward()
+            d_optimizer.step()
+
+            mean_g_loss += g_loss.item() / args.display_step
+            mean_d_loss += d_loss.item() / args.display_step
+
+            if cur_step % args.display_step == 0 and cur_step > 0:
+                print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
+                      .format(cur_step, mean_g_loss, mean_d_loss))
+                save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
+                mean_g_loss = 0.0
+                mean_d_loss = 0.0
+            cur_step += 1
+
+            # time 
+            time_elapsed_training = time.time() - since_training
+            since_load = time.time()
+            if args.verbose:
+                print('Loading images complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
+                time_elapsed_load // 60, time_elapsed_load % 60, 60*time_elapsed_load % 60))
+                print('Training complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
+                time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
+
+        g_scheduler.step()
+        d_scheduler.step()
+
+        # Save checkpoint
+        if args.saved_model_path is not None:
+            torch.save({
+                'epoch': epoch + epoch_run + 1,
+                # Networks states
+                #'encoder_state_dict': encoder.state_dict(),
+                'generator_state_dict': generator.state_dict(),
+                'discriminator_state_dict': discriminator.state_dict(),
+                # Best models states
+                # ver! best model and best kpi
+                # Optimizer states
+                'g_optimizer_state_dict': g_optimizer.state_dict(),
+                'd_optimizer_state_dict': d_optimizer.state_dict(),
+                # Scheduler states
+                'g_scheduler_state_dict': g_scheduler.state_dict(),
+                'd_scheduler_state_dict': d_scheduler.state_dict(),
+            }, path_bkp_model)
+
+
+def weights_init(m):
+    ''' Function for initializing all model weights '''
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+        nn.init.normal_(m.weight, 0., 0.02)
+
+
+
+def forward_pass(img_i, label_map, instance_map, boundary_map, img_o_real, encoder, generator, discriminator):
+    '''
+    Function that computes the forward pass and total loss for generator and discriminator.
+    '''
+    #feature_map = encoder(x_real, instance_map)
+    #x_fake = generator(torch.cat((label_map, boundary_map, feature_map), dim=1))
+    img_o_fake = generator(torch.cat((img_i,label_map, boundary_map), dim=1))
+
+    # Get necessary outputs for loss/backprop for both generator and discriminator
+    #fake_preds_for_g = discriminator(torch.cat((label_map, boundary_map, x_fake), dim=1))
+    #fake_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_fake.detach()), dim=1))
+    #real_preds_for_d = discriminator(torch.cat((label_map, boundary_map, x_real.detach()), dim=1))
+    fake_preds_for_g = discriminator(torch.cat((boundary_map,label_map, img_o_fake), dim=1))
+    fake_preds_for_d = discriminator(torch.cat((boundary_map,label_map, img_o_fake.detach()), dim=1))
+    real_preds_for_d = discriminator(torch.cat((boundary_map,label_map, img_o_real.detach()), dim=1))
+
+    return img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d
+    
+    #img_o_fake.detach()
