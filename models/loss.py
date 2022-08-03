@@ -57,6 +57,7 @@ class vgg_loss(nn.Module):
 
 def gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o_real, n_discriminators, lambda1=10., lambda2=10., norm_weight_to_one=True):
 
+    vgg_loss = vgg_loss()
     lambda0 = 1.0
     # Keep ratio of composite loss, but scale down max to 1.0
     scale = max(lambda0, lambda1, lambda2) if norm_weight_to_one else 1.0
