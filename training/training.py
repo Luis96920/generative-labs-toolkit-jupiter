@@ -15,8 +15,10 @@ from utils.dataloader import SwordSorceryDataset
 from utils.utils import print_device_name, save_tensor_images
 
 import ray
-from ray.util.sgd.torch import TorchTrainer
+import ray.train as train
 from ray.util.sgd.torch import TrainingOperator
+from ray.util.sgd import TorchTrainer
+
 
 # Parse torch version for autocast
 # ######################################################
