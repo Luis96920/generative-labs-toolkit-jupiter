@@ -14,9 +14,9 @@ from models.models_utils import Encoder
 from utils.dataloader import SwordSorceryDataset
 from utils.utils import print_device_name, save_tensor_images
 
-import ray
-from ray.util.sgd.torch import TorchTrainer
-from ray.util.sgd.torch import TrainingOperator
+# import ray
+# from ray.util.sgd.torch import TorchTrainer
+# from ray.util.sgd.torch import TrainingOperator
 
 # Parse torch version for autocast
 # ######################################################
@@ -84,15 +84,15 @@ def train_networks(args):
     g2_scheduler = torch.optim.lr_scheduler.LambdaLR(g2_optimizer, lr_lambda)
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
 
-    ### Distribution with Ray
-    CustomTrainingOperator = TrainingOperator.from_creators(
-        model_creator=ResNet18, # A function that returns a nn.Module
-        optimizer_creator=optimizer_creator, # A function that returns an optimizer
-        data_creator=cifar_creator, # A function that returns dataloaders
-        loss_creator=torch.nn.CrossEntropyLoss  # A loss function
-        )
+    # ### Distribution with Ray
+    # CustomTrainingOperator = TrainingOperator.from_creators(
+    #     model_creator=ResNet18, # A function that returns a nn.Module
+    #     optimizer_creator=optimizer_creator, # A function that returns an optimizer
+    #     data_creator=cifar_creator, # A function that returns dataloaders
+    #     loss_creator=torch.nn.CrossEntropyLoss  # A loss function
+    #     )
 
-    ray.init()
+    # ray.init()
 
     ### Training
     # output paths
