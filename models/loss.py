@@ -80,3 +80,12 @@ def den_loss(fake_preds_for_d, real_preds_for_d):
 
     return d_loss
 
+
+def gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, n_discriminators, vgg_loss):
+
+    g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, n_discriminators, vgg_loss)
+    d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
+
+    return g_loss, d_loss
+
+
