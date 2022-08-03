@@ -14,9 +14,9 @@ from models.models_utils import Encoder
 from utils.dataloader import SwordSorceryDataset
 from utils.utils import print_device_name, save_tensor_images
 
-import ray
-from ray.util.sgd.torch import TorchTrainer
-from ray.util.sgd.torch import TrainingOperator
+# import ray
+# from ray.util.sgd.torch import TorchTrainer
+# from ray.util.sgd.torch import TrainingOperator
 
 # Parse torch version for autocast
 # ######################################################
@@ -200,8 +200,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
                 img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
                     img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
 
-                g_loss = gen_loss(fake_preds_for_g, real_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
-                d_loss = den_loss(real_preds_for_d, fake_preds_for_d)
+                g_loss, d_loss = gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
                 img_o_fake = img_o_fake.detach()
 
             g_optimizer.zero_grad()
@@ -280,114 +279,114 @@ def forward_pass(img_i, label_map, instance_map, boundary_map, img_o_real, encod
     return img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d
 
 
-### Train with RAY
-class Pix2PixHDOperator(TrainingOperator):
-    def setup(self, dataloader, models, optimizers, schedulers, args, stage='', desc=''):
-        """Setup for this operator.
+# ### Train with RAY
+# class Pix2PixHDOperator(TrainingOperator):
+#     def setup(self, dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+#         """Setup for this operator.
 
-        This is where you define the training state and register it with Ray SGD.
+#         This is where you define the training state and register it with Ray SGD.
 
-        Args:
-            config (dict): Custom configuration value to be passed to
-                all creator and operator constructors. Same as ``self.config``.
-        """
-        encoder, generator, discriminator = models
-        g_optimizer, d_optimizer = optimizers
-        g_scheduler, d_scheduler = schedulers
+#         Args:
+#             config (dict): Custom configuration value to be passed to
+#                 all creator and operator constructors. Same as ``self.config``.
+#         """
+#         encoder, generator, discriminator = models
+#         g_optimizer, d_optimizer = optimizers
+#         g_scheduler, d_scheduler = schedulers
 
-        #loss_fn = Loss(device=args.device)
-        vgg_loss = VGG_Loss(device=args.device)
+#         #loss_fn = Loss(device=args.device)
+#         vgg_loss = VGG_Loss(device=args.device)
                 
-        self.models, self.optimizers, self.criterion, self.schedulers = \
-            self.register(models=models, optimizers=optimizers,
-                          criterion=v,
-                          schedulers=schedulers)
-        self.register_data(...)
+#         self.models, self.optimizers, self.criterion, self.schedulers = \
+#             self.register(models=models, optimizers=optimizers,
+#                           criterion=v,
+#                           schedulers=schedulers)
+#         self.register_data(...)
 
-    def train_batch(self, batch, batch_info):
-        """Trains on one batch of data from the data creator.
+#     def train_batch(self, batch, batch_info):
+#         """Trains on one batch of data from the data creator.
 
-        Example taken from:
-            https://github.com/eriklindernoren/PyTorch-GAN/blob/
-            a163b82beff3d01688d8315a3fd39080400e7c01/implementations/dcgan/dcgan.py
+#         Example taken from:
+#             https://github.com/eriklindernoren/PyTorch-GAN/blob/
+#             a163b82beff3d01688d8315a3fd39080400e7c01/implementations/dcgan/dcgan.py
 
-        Args:
-            batch: One item of the validation iterator.
-            batch_info (dict): Information dict passed in from ``train_epoch``.
+#         Args:
+#             batch: One item of the validation iterator.
+#             batch_info (dict): Information dict passed in from ``train_epoch``.
 
-        Returns:
-            A dict of metrics. Defaults to "loss" and "num_samples",
-                corresponding to the total number of datapoints in the batch.
-        """
-        Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
-        discriminator, generator = self.models
-        optimizer_D, optimizer_G = self.optimizers
+#         Returns:
+#             A dict of metrics. Defaults to "loss" and "num_samples",
+#                 corresponding to the total number of datapoints in the batch.
+#         """
+#         Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+#         discriminator, generator = self.models
+#         optimizer_D, optimizer_G = self.optimizers
 
-        # Adversarial ground truths
-        valid = Variable(Tensor(batch.shape[0], 1).fill_(1.0), requires_grad=False)
-        fake = Variable(Tensor(batch.shape[0], 1).fill_(0.0), requires_grad=False)
+#         # Adversarial ground truths
+#         valid = Variable(Tensor(batch.shape[0], 1).fill_(1.0), requires_grad=False)
+#         fake = Variable(Tensor(batch.shape[0], 1).fill_(0.0), requires_grad=False)
 
-        # Configure input
-        real_imgs = Variable(batch.type(Tensor))
+#         # Configure input
+#         real_imgs = Variable(batch.type(Tensor))
 
-        # -----------------
-        #  Train Generator
-        # -----------------
+#         # -----------------
+#         #  Train Generator
+#         # -----------------
 
-        optimizer_G.zero_grad()
+#         optimizer_G.zero_grad()
 
-        # Sample noise as generator input
-        z = Variable(Tensor(np.random.normal(0, 1, (
-                batch.shape[0], self.config["latent_dim"]))))
+#         # Sample noise as generator input
+#         z = Variable(Tensor(np.random.normal(0, 1, (
+#                 batch.shape[0], self.config["latent_dim"]))))
 
-        # Generate a batch of images
-        gen_imgs = generator(z)
+#         # Generate a batch of images
+#         gen_imgs = generator(z)
 
-        # Loss measures generator's ability to fool the discriminator
-        g_loss = adversarial_loss(discriminator(gen_imgs), valid)
+#         # Loss measures generator's ability to fool the discriminator
+#         g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
-        g_loss.backward()
-        optimizer_G.step()
+#         g_loss.backward()
+#         optimizer_G.step()
 
-        # ---------------------
-        #  Train Discriminator
-        # ---------------------
+#         # ---------------------
+#         #  Train Discriminator
+#         # ---------------------
 
-        optimizer_D.zero_grad()
+#         optimizer_D.zero_grad()
 
-        # Measure discriminator's ability to classify real from generated samples
-        real_loss = adversarial_loss(discriminator(real_imgs), valid)
-        fake_loss = adversarial_loss(discriminator(gen_imgs.detach()), fake)
-        d_loss = (real_loss + fake_loss) / 2
+#         # Measure discriminator's ability to classify real from generated samples
+#         real_loss = adversarial_loss(discriminator(real_imgs), valid)
+#         fake_loss = adversarial_loss(discriminator(gen_imgs.detach()), fake)
+#         d_loss = (real_loss + fake_loss) / 2
 
-        d_loss.backward()
-        optimizer_D.step()
+#         d_loss.backward()
+#         optimizer_D.step()
 
-        return {
-            "loss_g": g_loss.item(),
-            "loss_d": d_loss.item(),
-            "num_samples": imgs.shape[0]
-        }
+#         return {
+#             "loss_g": g_loss.item(),
+#             "loss_d": d_loss.item(),
+#             "num_samples": imgs.shape[0]
+#         }
 
-trainer = TorchTrainer(
-    training_operator_cls=GANOperator,
-    num_workers=num_workers,
-    config=config,
-    use_gpu=True
-)
+# trainer = TorchTrainer(
+#     training_operator_cls=GANOperator,
+#     num_workers=num_workers,
+#     config=config,
+#     use_gpu=True
+# )
 
-for i in range(5):
-    stats = trainer.train()
-    print(stats)
+# for i in range(5):
+#     stats = trainer.train()
+#     print(stats)
 
 
-    ### Distribution with Ray
-    CustomTrainingOperator = TrainingOperator.from_creators(
-        model_creator=ResNet18, # A function that returns a nn.Module
-        optimizer_creator=optimizer_creator, # A function that returns an optimizer
-        data_creator=cifar_creator, # A function that returns dataloaders
-        loss_creator=torch.nn.CrossEntropyLoss  # A loss function
-    )
+#     ### Distribution with Ray
+#     CustomTrainingOperator = TrainingOperator.from_creators(
+#         model_creator=ResNet18, # A function that returns a nn.Module
+#         optimizer_creator=optimizer_creator, # A function that returns an optimizer
+#         data_creator=cifar_creator, # A function that returns dataloaders
+#         loss_creator=torch.nn.CrossEntropyLoss  # A loss function
+#     )
 
-    ray.init()
+#     ray.init()
     
