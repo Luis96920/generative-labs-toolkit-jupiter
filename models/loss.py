@@ -3,7 +3,7 @@ import torch.nn as nn
 from .models_utils import VGG19
 import torch.nn.functional as F
 
-def adv_loss(self, discriminator_preds, is_real):
+def adv_loss(discriminator_preds, is_real):
     '''
     Computes adversarial loss from nested list of fakes outputs from discriminator.
     '''
@@ -15,7 +15,7 @@ def adv_loss(self, discriminator_preds, is_real):
         adv_loss += F.mse_loss(pred, target(pred))
     return adv_loss
 
-def fm_loss(self, real_preds, fake_preds):
+def fm_loss(real_preds, fake_preds):
     '''
     Computes feature matching loss from nested lists of fake and real outputs from discriminator.
     '''
