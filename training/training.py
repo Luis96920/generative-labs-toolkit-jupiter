@@ -328,7 +328,8 @@ class Pix2PixHDOperator(TrainingOperator):
         self.models, self.optimizers, self.criterion, self.schedulers = \
             self.register(models=models, optimizers=optimizers,
                           criterion=gd_loss,
-                          schedulers=schedulers)
+                          #schedulers=schedulers
+                          )
         self.register_data(train_loader=dataloader)
 
     def train_batch(self, batch, batch_info):
