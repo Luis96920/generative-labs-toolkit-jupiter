@@ -325,7 +325,7 @@ class Pix2PixHDOperator(TrainingOperator):
         args = config["args"]
 
         self.args = args   
-        self.models, self.optimizers, self.criterion, self.schedulers = \
+        self.models, self.optimizers, self.criterion = \
             self.register(models=models, optimizers=optimizers,
                           criterion=gd_loss,
                           #schedulers=schedulers
