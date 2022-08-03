@@ -140,7 +140,7 @@ def train_networks(args):
     )
 
 
-def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+def trainaa(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
 
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
