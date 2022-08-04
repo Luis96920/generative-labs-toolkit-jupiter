@@ -43,7 +43,7 @@ def train_networks(args):
     args.world_size = NODES * args.ngpus
     print(f'world size: {args.world_size}')
     args.rank = None
-    rank = NODES * args.ngpus
+    args.rank = NODES * args.ngpus
     if should_distribute(args.world_size):
         print('Using distributed PyTorch with {} backend'.format(args.backend))
         dist.init_process_group(backend=args.backend, world_size=args.world_size, rank=args.rank)
