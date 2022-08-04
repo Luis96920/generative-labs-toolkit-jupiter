@@ -7,16 +7,12 @@ import os
 import argparse
 
 
-WORLD_SIZE      = int(os.environ.get('WORLD_SIZE', 1))
+
 #CHECKPOINT_PATH = "model.checkpoint"
 
 
-def should_distribute():
-    print('World Size')
-    print(WORLD_SIZE)
-    print('dist is available:')
-    print(dist.is_available())
-    return dist.is_available() and WORLD_SIZE > 1
+def should_distribute(world_size):
+    return dist.is_available() and world_size > 1
 
 
 def is_distributed():

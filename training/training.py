@@ -20,6 +20,7 @@ import ray.train as train
 from ray.util.sgd.torch import TrainingOperator
 from ray.util.sgd import TorchTrainer
 
+NODES      = int(os.environ.get('WORLD_SIZE', 1))
 
 # Parse torch version for autocast
 # ######################################################
@@ -38,14 +39,15 @@ def train_networks(args):
         args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print_device_name(args.device)
 
-    args.rank = args.world_size = None
-    if should_distribute():
+    
+    args.world_size = NODES * args.ngpus
+    args.rank = None
+    if should_distribute(args.world_size):
         print('Using distributed PyTorch with {} backend'.format(args.backend))
         dist.init_process_group(backend=args.backend)
         args.rank = dist.get_rank()
         args.world_size = dist.get_world_size()
 
-   
     
     # Training directories
     train_dir = {
