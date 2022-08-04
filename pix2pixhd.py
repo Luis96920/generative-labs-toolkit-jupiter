@@ -81,7 +81,8 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir,"History"))
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
-
+    args.ngpus = torch.cuda.device_count()
+    print(f'total de gpus:{args.ngpus}')
     train_networks(args)
     print("done training")
 
