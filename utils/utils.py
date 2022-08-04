@@ -12,14 +12,14 @@ WORLD_SIZE      = int(os.environ.get('WORLD_SIZE', 1))
 
 
 def should_distribute():
+    print('World Size')
+    print(WORLD_SIZE)
+    print('dist is available:')
+    print(dist.is_available())
     return dist.is_available() and WORLD_SIZE > 1
 
 
 def is_distributed():
-    print('dist is available:')
-    dist.is_available()
-    print('dist is_initialized:')
-    dist.is_initialized()
     return dist.is_available() and dist.is_initialized()
     
 
