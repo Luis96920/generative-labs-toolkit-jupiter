@@ -12,17 +12,17 @@ def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, r
     
     dataset = SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes)
 
-    train_sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank) if is_distributed() else None
-    print('Train sample')
-    print(train_sampler)
+    sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=0, drop_last=False) if is_distributed() else None
+    print('Sampler:')
+    print(sampler)
 
-    train_loader = DataLoader(dataset, batch_size=batch_size,
+    loader = DataLoader(dataset, batch_size=batch_size,
                                   collate_fn=SwordSorceryDataset.collate_fn,
                                   num_workers=1, pin_memory=False, 
-                                  shuffle=True, drop_last=False,
-                                  sampler=train_sampler)
+                                  shuffle=(sampler is None),
+                                  sampler=sampler)
    
-    return train_loader 
+    return loader 
 
 
 def scale_width(img, target_width, method):
