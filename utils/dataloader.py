@@ -9,19 +9,18 @@ import numpy as np
 
 def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, rank):
     
-    dataloader = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes),
-        collate_fn=SwordSorceryDataset.collate_fn, batch_size=batch_size, shuffle=True, drop_last=False, pin_memory=True,
-    )
+    dataset = SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes)
 
-    train_sampler = DistributedSampler(dataloader, 
+    train_sampler = DistributedSampler(dataset, 
                                        num_replicas=world_size,
                                        rank=rank)
 
-    train_loader = DataLoader(dataloader, batch_size=batch_size,
+    train_loader = DataLoader(dataset, batch_size=batch_size,
+                                  collate_fn=SwordSorceryDataset.collate_fn,
                                   num_workers=1, pin_memory=False, 
+                                  shuffle=True, drop_last=False,
                                   sampler=train_sampler)
-    
+   
     return train_loader 
 
 
