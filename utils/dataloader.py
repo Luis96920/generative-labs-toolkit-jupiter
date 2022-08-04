@@ -5,15 +5,16 @@ from torch.utils.data.distributed import DistributedSampler
 from PIL import Image
 import os
 import numpy as np
+from utils.utils import is_distributed
 
 
 def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, rank):
     
     dataset = SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes)
 
-    train_sampler = DistributedSampler(dataset, 
-                                       num_replicas=world_size,
-                                       rank=rank)
+    train_sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank) if is_distributed() else None
+    print('Train sample')
+    print(train_sampler)
 
     train_loader = DataLoader(dataset, batch_size=batch_size,
                                   collate_fn=SwordSorceryDataset.collate_fn,
