@@ -1,8 +1,23 @@
 import torch 
 from torchvision.utils import make_grid
+import torch.distributed as dist
+
 import matplotlib.pyplot as plt
 import os
 import argparse
+
+
+WORLD_SIZE      = int(os.environ.get('WORLD_SIZE', 1))
+#CHECKPOINT_PATH = "model.checkpoint"
+
+
+def should_distribute():
+    return dist.is_available() and WORLD_SIZE > 1
+
+
+def is_distributed():
+    return dist.is_available() and dist.is_initialized()
+    
 
 def print_device_name(device):
   print('Using device:', device)
@@ -44,8 +59,3 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
-
-
-

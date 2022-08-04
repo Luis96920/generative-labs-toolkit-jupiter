@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import torch.distributed as dist
 
 from tqdm import tqdm
 import time
@@ -11,8 +12,8 @@ from models.discriminators import MultiscaleDiscriminator
 from models.generators import GlobalGenerator, LocalEnhancer
 from models.loss import gd_loss, VGG_Loss
 from models.models_utils import Encoder
-from utils.dataloader import SwordSorceryDataset
-from utils.utils import print_device_name, save_tensor_images
+from utils.dataloader import SwordSorceryDataset, create_loaders
+from utils.utils import print_device_name, save_tensor_images, should_distribute, is_distributed
 
 import ray
 import ray.train as train
@@ -29,13 +30,22 @@ has_autocast = version >= (1, 6)
 
 def train_networks(args):
     # init params
-    n_classes = args.n_classes                  # total number of object classes
+    n_classes = args.n_classes                  # total number of object classes # maybe we're not using n_classes, just args.n_classes
     rgb_channels = n_features = args.n_features       
     
+    # Device conf, GPU and distributed computing
     if args.device not in {'cuda', 'cpu'}:
         args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print_device_name(args.device)
+
+    if should_distribute():
+        print('Using distributed PyTorch with {} backend'.format(args.backend))
+        dist.init_process_group(backend=args.backend)
+
+    args.rank = dist.get_rank()
+    args.world_size = dist.get_world_size()
     
+    # Training directories
     train_dir = {
         'path_root': args.input_path_dir, 
         'path_inputs': {
@@ -53,10 +63,11 @@ def train_networks(args):
 
     ### Init train
     ## Phase 1: Low Resolution (1024 x 512)
-    dataloader1 = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes),
-        collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_1, shuffle=True, drop_last=False, pin_memory=True,
-    )
+    # dataloader1 = DataLoader(
+    #     SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes),
+    #     collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_1, shuffle=True, drop_last=False, pin_memory=True,
+    # )
+    dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=args.rank)
     encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
     #generator1 = GlobalGenerator(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator1 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels, n_discriminators=2).to(args.device).apply(weights_init)
@@ -69,12 +80,12 @@ def train_networks(args):
     g1_scheduler = torch.optim.lr_scheduler.LambdaLR(g1_optimizer, lr_lambda)
     d1_scheduler = torch.optim.lr_scheduler.LambdaLR(d1_optimizer, lr_lambda)
 
-
     ## Phase 2: High Resolution (2048 x 1024)
-    dataloader2 = DataLoader(
-        SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes),
-        collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_2, shuffle=True, drop_last=False, pin_memory=True,
-    )
+    # dataloader2 = DataLoader(
+    #     SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes),
+    #     collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_2, shuffle=True, drop_last=False, pin_memory=True,
+    # )
+    dataloader2 = create_loaders(train_dir, target_width=args.target_width_2, batch_size=args.batch_size_2, n_classes=n_classes, world_size=args.world_size, rank=args.rank)
     #generator2 = LocalEnhancer(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator2 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
@@ -85,6 +96,16 @@ def train_networks(args):
     d2_optimizer = torch.optim.Adam(list(discriminator2.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     g2_scheduler = torch.optim.lr_scheduler.LambdaLR(g2_optimizer, lr_lambda)
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
+
+    if is_distributed():
+        Distributor = nn.parallel.DistributedDataParallel if args.device.type == 'cuda' \
+            else nn.parallel.DistributedDataParallelCPU
+        model = Distributor(model)
+        encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
+        generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+        discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
+        generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+        discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
 
     ### Training
     # output paths
@@ -142,7 +163,7 @@ def train_networks(args):
     )
 
 
-def trainaa(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
 
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
@@ -281,9 +302,11 @@ def forward_pass(img_i, label_map, instance_map, boundary_map, img_o_real, encod
     return img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d
 
 
-### Train with RAY
 
-def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+
+
+### Train with RAY
+def train_ray(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     config = {}
     config['dataloader']=dataloader
     config['models']=models

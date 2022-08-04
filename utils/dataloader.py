@@ -1,8 +1,28 @@
 import torch
 import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
 from PIL import Image
 import os
 import numpy as np
+
+
+def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, rank):
+    
+    dataloader = DataLoader(
+        SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes),
+        collate_fn=SwordSorceryDataset.collate_fn, batch_size=batch_size, shuffle=True, drop_last=False, pin_memory=True,
+    )
+
+    train_sampler = DistributedSampler(dataloader, 
+                                       num_replicas=world_size,
+                                       rank=rank)
+
+    train_loader = DataLoader(dataloader, batch_size=batch_size,
+                                  num_workers=1, pin_memory=False, 
+                                  sampler=train_sampler)
+    
+    return train_loader 
 
 
 def scale_width(img, target_width, method):
@@ -13,6 +33,7 @@ def scale_width(img, target_width, method):
     if w == target_width: return img
     target_height = target_width * h // w
     return img.resize((target_width, target_height), method)
+
 
 class SwordSorceryDataset(torch.utils.data.Dataset):
     '''

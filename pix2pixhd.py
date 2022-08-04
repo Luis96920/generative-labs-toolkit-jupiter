@@ -5,9 +5,11 @@ from training.training import train_networks
 from utils.utils import str2bool
 from datetime import datetime
 import torch
+import torch.distributed as dist
+
 
 def parse_args():
-    desc = "An autoencoder for pose similarity detection"
+    desc = "Pix2PixHD"
 
     parser = argparse.ArgumentParser(description=desc)
 
@@ -35,13 +37,19 @@ def parse_args():
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
-    parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
     parser.add_argument('--resume_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training. You'll need to add experiment name args to identify the experiment to recover.")
 
     # Output paths
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
     parser.add_argument('--saved_images_path', type=str, default="Images", help='Folder name for save images during training')
     parser.add_argument('--saved_model_path', type=str, default="Saved_Models", help='Folder name for save model')
+
+    # Distributed configuration 
+    parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
+    if dist.is_available():
+        parser.add_argument('--backend', type=str, help='distributed backend',
+                        choices=[dist.Backend.GLOO, dist.Backend.NCCL, dist.Backend.MPI],
+                        default=dist.Backend.NCCL)
 
 
     """ 
