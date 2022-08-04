@@ -16,6 +16,10 @@ def should_distribute():
 
 
 def is_distributed():
+    print('dist is available:')
+    dist.is_available()
+    print('dist is_initialized:')
+    dist.is_initialized()
     return dist.is_available() and dist.is_initialized()
     
 
