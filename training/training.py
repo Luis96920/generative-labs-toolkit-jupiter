@@ -168,6 +168,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
     if(args.resume_training and os.path.exists(path_bkp_model)):
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
+        cur_step = cp['cur_step']
         #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
         generator.load_state_dict(cp['generator_state_dict'])
         discriminator.load_state_dict(cp['discriminator_state_dict'])
@@ -224,8 +225,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
             if cur_step % args.display_step == 0 and cur_step > 0:
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
-                args.writer.add_scalar('Loss Generator', mean_g_loss, epoch + epoch_run)
-                args.writer.add_scalar('Loss Discriminator', mean_d_loss, epoch + epoch_run)
+                args.writer.add_scalar('Loss Generator', mean_g_loss, cur_step)
+                args.writer.add_scalar('Loss Discriminator', mean_d_loss, cur_step)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
 
@@ -247,6 +248,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         if args.saved_model_path is not None:
             torch.save({
                 'epoch': epoch + epoch_run + 1,
+                'cur_step': cur_step,
                 # Networks states
                 #'encoder_state_dict': encoder.state_dict(),
                 'generator_state_dict': generator.state_dict(),
