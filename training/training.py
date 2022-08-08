@@ -57,7 +57,7 @@ def train_networks(gpu, args):
     ### Init train
     ## Phase 1: Low Resolution (1024 x 512)
     dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=rank)
-    encoder = Encoder(rgb_channels, n_features).apply(weights_init)
+    encoder = Encoder(rgb_channels, n_features).cuda(args.gpu).apply(weights_init)
     generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).apply(weights_init)
     discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).apply(weights_init)
 
@@ -140,7 +140,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
 
-    encoder, generator, discriminator = encoder.cuda(args.gpu), generator.cuda(args.gpu), discriminator.cuda(args.gpu)
+    generator, discriminator = generator.cuda(args.gpu), discriminator.cuda(args.gpu)
     if is_distributed():
         encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[args.gpu])
         generator = nn.parallel.DistributedDataParallel(generator, device_ids=[args.gpu])
