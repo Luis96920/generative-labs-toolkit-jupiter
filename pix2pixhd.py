@@ -7,7 +7,7 @@ from datetime import datetime
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 
 
 
@@ -94,9 +94,9 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
     # Tensorboard
-    args.writer = SummaryWriter(log_dir=os.path.join(args.output_path_dir, args.saved_history_path),
-                       filename_suffix=args.experiment_name
-                      )
+    # args.writer = SummaryWriter(log_dir=os.path.join(args.output_path_dir, args.saved_history_path),
+    #                    filename_suffix=args.experiment_name
+    #                   )
 
     # Multiprocessing
     args.world_size = args.gpus * args.nodes

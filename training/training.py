@@ -151,9 +151,6 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
     vgg_loss = VGG_Loss(gpu=args.gpu)
 
     # running variables
-    cur_step = 0
-    mean_g_loss = 0.0
-    mean_d_loss = 0.0
     epoch_run=0
 
     # recover from checkpoint
@@ -172,6 +169,9 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
     for epoch in tqdm(range(epochs-epoch_run), desc=desc):
+        cur_step = 0
+        mean_g_loss = 0.0
+        mean_d_loss = 0.0
         # Training epoch
         # time
         since_load = time.time()
@@ -237,9 +237,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         # TensorBoard 
         mean_g_loss = mean_g_loss / (cur_step * lb)
         mean_d_loss = mean_d_loss / (cur_step * lb)
-        args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
-        args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
-        cur_step = 0
+        # args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
+        # args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
 
         # Save checkpoint
         if args.saved_model_path is not None:
