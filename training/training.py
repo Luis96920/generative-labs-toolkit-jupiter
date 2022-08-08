@@ -212,14 +212,14 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
             d_loss.backward()
             d_optimizer.step()
 
-            mean_g_loss += g_loss.item() / args.display_step
-            mean_d_loss += d_loss.item() / args.display_step
+            # Loss for TensorBoard
+            lb = img_i.size(0)
+            mean_g_loss += g_loss.item() * lb
+            mean_d_loss += d_loss.item() * lb
 
             if cur_step % args.display_step == 0 and cur_step > 0:
-                #print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step, mean_g_loss, mean_d_loss))
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
-                mean_g_loss = 0.0
-                mean_d_loss = 0.0
+
             cur_step += 1
 
             # time 
@@ -233,6 +233,13 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
         g_scheduler.step()
         d_scheduler.step()
+
+        # TensorBoard 
+        mean_g_loss = mean_g_loss / (cur_step * lb)
+        mean_d_loss = mean_d_loss / (cur_step * lb)
+        args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
+        args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
+        cur_step = 0
 
         # Save checkpoint
         if args.saved_model_path is not None:

@@ -7,6 +7,8 @@ from datetime import datetime
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
+from torch.utils.tensorboard import SummaryWriter
+
 
 
 def parse_args():
@@ -45,6 +47,7 @@ def parse_args():
     parser.add_argument('--output_path_dir', type=str, default="", help='The base directory to hold the results')
     parser.add_argument('--saved_images_path', type=str, default="Images", help='Folder name for save images during training')
     parser.add_argument('--saved_model_path', type=str, default="Saved_Models", help='Folder name for save model')
+    parser.add_argument('--saved_history_path', type=str, default="History/", help='The directory for history experiments. Compatible with TensorBoard.')
 
     # Distributed configuration 
     parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N', help='Number of nodes')
@@ -60,7 +63,7 @@ def parse_args():
 
 
     """ 
-    parser.add_argument('--history_dir', type=str, default="History/", help='The directory for input data')
+    
     parser.add_argument('--notes', type=str, default="N/A", help='A description of the experiment')
     """
     return parser.parse_args()
@@ -87,8 +90,13 @@ def main():
         print('creating directories in ' + args.output_path_dir)
         os.makedirs(args.output_path_dir)
         os.makedirs(os.path.join(args.output_path_dir, args.saved_images_path))
-        os.makedirs(os.path.join(args.output_path_dir,"History"))
+        os.makedirs(os.path.join(args.output_path_dir, args.saved_history_path))
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
+
+    # Tensorboard
+    args.writer = SummaryWriter(log_dir=os.path.join(args.output_path_dir, args.saved_history_path),
+                       filename_suffix=args.experiment_name
+                      )
 
     # Multiprocessing
     args.world_size = args.gpus * args.nodes
