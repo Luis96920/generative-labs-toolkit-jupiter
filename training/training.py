@@ -244,8 +244,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         # TensorBoard 
         mean_g_loss = mean_g_loss / (cur_step * lb)
         mean_d_loss = mean_d_loss / (cur_step * lb)
-        args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
-        args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
+        args.writer.add_scalar('Loss Generator', mean_g_loss, epoch + epoch_run)
+        args.writer.add_scalar('Loss Discriminator', mean_d_loss, epoch + epoch_run)
 
         # Save checkpoint
         if args.saved_model_path is not None:
