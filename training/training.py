@@ -41,7 +41,6 @@ def train_networks(gpu, args):
     # Multiprocesing
     rank = args.nr * args.gpus + gpu
     if should_distribute(args.world_size):
-        print('Using distributed PyTorch with {} backend'.format(args.backend))
         dist.init_process_group(backend=args.backend, init_method='env://', world_size=args.world_size, rank=rank)
     
     # Training directories
