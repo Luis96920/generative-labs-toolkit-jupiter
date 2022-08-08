@@ -158,8 +158,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
     # recover from checkpoint
     path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_' + stage + '.pth')
-    print('Resume training: ' + str(args.resume_training))
     if(args.resume_training and os.path.exists(path_bkp_model)):
+        print('Resume training: ' + str(args.resume_training))
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
         #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
