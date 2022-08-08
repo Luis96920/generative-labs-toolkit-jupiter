@@ -36,9 +36,9 @@ class VGG_Loss(nn.Module):
         norm_weight_to_one: whether to normalize weights to (0, 1], a bool
     '''
 
-    def __init__(self, device='cuda'):
+    def __init__(self, gpu):
         super().__init__()
-        self.vgg = VGG19().to(device)
+        self.vgg = VGG19().cuda(gpu)
         self.vgg_weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
 
 
