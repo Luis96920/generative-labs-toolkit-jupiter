@@ -13,6 +13,8 @@ from models.loss import gd_loss, VGG_Loss
 from models.models_utils import Encoder
 from utils.dataloader import create_loaders
 from utils.utils import save_tensor_images, should_distribute, is_distributed
+from torch.utils.tensorboard import SummaryWriter
+
 
 NODES      = int(os.environ.get('WORLD_SIZE', 1))
 
@@ -150,6 +152,11 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
     vgg_loss = VGG_Loss(gpu=args.gpu)
 
+    # Tensorboard
+    args.writer = SummaryWriter(log_dir=os.path.join(args.output_path_dir, args.saved_history_path),
+                       filename_suffix=args.experiment_name + '_' + stage
+                      )
+
     # running variables
     epoch_run=0
 
@@ -237,8 +244,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         # TensorBoard 
         mean_g_loss = mean_g_loss / (cur_step * lb)
         mean_d_loss = mean_d_loss / (cur_step * lb)
-        # args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
-        # args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
+        args.writer.add_scalar('Loss Generator', mean_g_loss.item(), epoch + epoch_run)
+        args.writer.add_scalar('Loss Discriminator', mean_d_loss.item(), epoch + epoch_run)
 
         # Save checkpoint
         if args.saved_model_path is not None:
