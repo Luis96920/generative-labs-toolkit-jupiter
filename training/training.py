@@ -158,6 +158,9 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
                       )
 
     # running variables
+    cur_step = 0
+    mean_g_loss = 0.0
+    mean_d_loss = 0.0
     epoch_run=0
 
     # recover from checkpoint
@@ -176,10 +179,6 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
     for epoch in tqdm(range(epochs-epoch_run), desc=desc):
-        cur_step = 0
-        mean_g_loss = 0.0
-        mean_d_loss = 0.0
-        # Training epoch
         # time
         since_load = time.time()
         #for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}', leave=True):
@@ -220,12 +219,15 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
             d_optimizer.step()
 
             # Loss for TensorBoard
-            lb = img_i.size(0)
-            mean_g_loss += g_loss.item() * lb
-            mean_d_loss += d_loss.item() * lb
+            mean_g_loss += g_loss.item() / args.display_step
+            mean_d_loss += d_loss.item() / args.display_step
 
             if cur_step % args.display_step == 0 and cur_step > 0:
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
+                args.writer.add_scalar('Loss Generator', mean_g_loss, epoch + epoch_run)
+                args.writer.add_scalar('Loss Discriminator', mean_d_loss, epoch + epoch_run)
+                mean_g_loss = 0.0
+                mean_d_loss = 0.0
 
             cur_step += 1
 
@@ -239,13 +241,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
                 time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
 
         g_scheduler.step()
-        d_scheduler.step()
-
-        # TensorBoard 
-        mean_g_loss = mean_g_loss / (cur_step * lb)
-        mean_d_loss = mean_d_loss / (cur_step * lb)
-        args.writer.add_scalar('Loss Generator', mean_g_loss, epoch + epoch_run)
-        args.writer.add_scalar('Loss Discriminator', mean_d_loss, epoch + epoch_run)
+        d_scheduler.step()    
 
         # Save checkpoint
         if args.saved_model_path is not None:
