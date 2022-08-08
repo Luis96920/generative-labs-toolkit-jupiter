@@ -231,7 +231,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
                     img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
                         img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
 
-                    g_loss, d_loss = gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
+                    g_loss, d_loss = gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, 2, vgg_loss)
                     img_o_fake = img_o_fake.detach()
             else:
                 img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
