@@ -6,6 +6,7 @@ from utils.utils import str2bool
 from datetime import datetime
 import torch
 import torch.distributed as dist
+import torch.multiprocessing as mp
 
 
 def parse_args():
@@ -45,6 +46,9 @@ def parse_args():
     parser.add_argument('--saved_model_path', type=str, default="Saved_Models", help='Folder name for save model')
 
     # Distributed configuration 
+    parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N', help='Number of nodes')
+    parser.add_argument('-g', '--gpus', default=1, type=int, help='Number of GPUs per node')
+    parser.add_argument('-nr', '--nr', default=0, type=int, help='Ranking within the nodes')
     parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
     if dist.is_available():
         parser.add_argument('--backend', type=str, help='distributed backend',
@@ -54,9 +58,6 @@ def parse_args():
 
     """ 
     parser.add_argument('--history_dir', type=str, default="History/", help='The directory for input data')
-    parser.add_argument('--input_channels', type=int, default=2, help='The number of input bone dims')
-    parser.add_argument('--output_channels', type=int, default=2, help='The number of input bone dims')
-    parser.add_argument('--latent_dim', type=int, default=64, help='the size of the latent dim')
     parser.add_argument('--notes', type=str, default="N/A", help='A description of the experiment')
     """
     return parser.parse_args()
@@ -65,6 +66,7 @@ def parse_args():
 def main():
     args = parse_args()
 
+    # Resume training and experiment name
     if (args.resume_training):
         args.experiment_name = args.experiment_name
         args.low_resolution_finished = torch.load(os.path.join(args.output_path_dir, args.experiment_name, args.saved_model_path, 'training_status.info'))['low_resolution_finished']
@@ -72,8 +74,8 @@ def main():
         args.experiment_name = datetime.now().strftime("%Y_%m_%d_%H_%M") + "_" + args.experiment_name
         args.low_resolution_finished = False
 
+    # Output path dir
     args.output_path_dir = os.path.join(args.output_path_dir,args.experiment_name) 
-
     if(not os.path.exists(args.output_path_dir)):
         print('creating directories in ' + args.output_path_dir)
         os.makedirs(args.output_path_dir)
@@ -81,9 +83,13 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir,"History"))
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
-    args.ngpus = torch.cuda.device_count()
-    print(f'total de gpus:{args.ngpus}')
-    train_networks(args)
+    # Multiprocessing
+    args.world_size = args.gpus * args.nodes                #
+    os.environ['MASTER_ADDR'] = '10.57.23.164'              #
+    os.environ['MASTER_PORT'] = '8888'                      #
+    mp.spawn(train_networks, nprocs=args.gpus, args=(args,))   
+    
+    #train_networks(args)
     print("done training")
 
 

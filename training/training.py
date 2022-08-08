@@ -29,27 +29,26 @@ version = tuple(int(n) for n in version.split('.')[:-1])
 has_autocast = version >= (1, 6)
 # ######################################################
 
-def train_networks(args):
+def train_networks(gpu, args):
+    
     # init params
     n_classes = args.n_classes                  # total number of object classes # maybe we're not using n_classes, just args.n_classes
     rgb_channels = n_features = args.n_features       
     
     # Device conf, GPU and distributed computing
-    if args.device not in {'cuda', 'cpu'}:
-        args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print_device_name(args.device)
+    # if args.device not in {'cuda', 'cpu'}:
+    #     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #     print_device_name(args.device)
+    torch.cuda.set_device(gpu)
 
-    
-    args.world_size = NODES * args.ngpus
-    print(f'world size: {args.world_size}')
-    args.rank = None
-    args.rank = NODES * args.ngpus
+    # Multiprocesing
+    #args.world_size = NODES * args.ngpus
+    #print(f'world size: {args.world_size}')
+    rank = args.nr * args.gpus + gpu
     if should_distribute(args.world_size):
         print('Using distributed PyTorch with {} backend'.format(args.backend))
-        dist.init_process_group(backend=args.backend, world_size=args.world_size, rank=args.rank)
-        args.rank = dist.get_rank()
-        args.world_size = dist.get_world_size()
-
+        #dist.init_process_group(backend=args.backend, world_size=args.world_size, rank=args.rank)
+        dist.init_process_group(backend=args.backend, init_method='env://', world_size=args.world_size, rank=rank)
     
     # Training directories
     train_dir = {
@@ -74,12 +73,12 @@ def train_networks(args):
     #     collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_1, shuffle=True, drop_last=False, pin_memory=True,
     # )
     dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=args.rank)
-    encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
+    encoder = Encoder(rgb_channels, n_features).cuda(gpu).apply(weights_init)
     #generator1 = GlobalGenerator(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator1 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels, n_discriminators=2).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
-    generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
-    discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
+    generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).cuda(gpu).apply(weights_init)
+    discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).cuda(gpu).apply(weights_init)
 
     g1_optimizer = torch.optim.Adam(list(generator1.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d1_optimizer = torch.optim.Adam(list(discriminator1.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
@@ -95,23 +94,24 @@ def train_networks(args):
     #generator2 = LocalEnhancer(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator2 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
-    generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
-    discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
+    generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).cuda(gpu).apply(weights_init)
+    discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).cuda(gpu).apply(weights_init)
 
     g2_optimizer = torch.optim.Adam(list(generator2.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d2_optimizer = torch.optim.Adam(list(discriminator2.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     g2_scheduler = torch.optim.lr_scheduler.LambdaLR(g2_optimizer, lr_lambda)
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
 
-    if is_distributed():
-        Distributor = nn.parallel.DistributedDataParallel if args.device.type == 'cuda' \
-            else nn.parallel.DistributedDataParallelCPU
-        model = Distributor(model)
-        encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
-        generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
-        discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
-        generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
-        discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
+    # if is_distributed():
+    #     Distributor = nn.parallel.DistributedDataParallel if args.device.type == 'cuda' \
+    #         else nn.parallel.DistributedDataParallelCPU
+    #     model = Distributor(model)
+    #     encoder = Encoder(rgb_channels, n_features).to(args.device).apply(weights_init)
+    #     generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+    #     discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
+    #     generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
+    #     discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
+    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
 
     ### Training
     # output paths
