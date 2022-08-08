@@ -1,6 +1,6 @@
 import argparse
 import os
-import shutil
+import warnings
 from training.training import train_networks
 from utils.utils import str2bool
 from datetime import datetime
@@ -13,6 +13,9 @@ def parse_args():
     desc = "Pix2PixHD"
 
     parser = argparse.ArgumentParser(description=desc)
+
+    # Warnings parameters
+    parser.add_argument('--warnings', type=str2bool, nargs='?', const=True, default=False, help="Show warnings")
 
     # Dataset parameters and input paths
     parser.add_argument('--n_classes', type=int, default=2, help='Number of segmented instances in the dataset. Eg. Character and background')
@@ -65,6 +68,10 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    # warnings
+    if args.warnings:
+        warnings.filterwarnings("ignore")
 
     # Resume training and experiment name
     if (args.resume_training):
