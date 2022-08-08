@@ -15,7 +15,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
 
     # Warnings parameters
-    parser.add_argument('--warnings', type=str2bool, nargs='?', const=True, default=False, help="Show warnings")
+    parser.add_argument('--warnings', type=str2bool, nargs='?', const=False, default=True, help="Show warnings")
 
     # Dataset parameters and input paths
     parser.add_argument('--n_classes', type=int, default=2, help='Number of segmented instances in the dataset. Eg. Character and background')
