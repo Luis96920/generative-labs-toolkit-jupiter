@@ -213,11 +213,11 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
         # time
         since_load = time.time()
         for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
-            img_i = img_i.to(args.device)
-            labels = labels.to(args.device)
-            insts = insts.to(args.device)
-            bounds = bounds.to(args.device)
-            img_o = img_o.to(args.device)
+            img_i = img_i.cuda(args.gpu)
+            labels = labels.cuda(args.gpu)#to(args.device)
+            insts = insts.cuda(args.gpu)#to(args.device)
+            bounds = bounds.cuda(args.gpu)#to(args.device)
+            img_o = img_o.cuda(args.gpu)#to(args.device)
 
             # time
             time_elapsed_load = time.time() - since_load
