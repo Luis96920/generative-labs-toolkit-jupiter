@@ -113,7 +113,12 @@ def train_networks(gpu, args):
     #     discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).to(args.device).apply(weights_init)
     #     generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).to(args.device).apply(weights_init)
     #     discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).to(args.device).apply(weights_init)
-    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu])
+    encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[gpu])
+    generator1 = nn.parallel.DistributedDataParallel(generator1, device_ids=[gpu])
+    discriminator1 = nn.parallel.DistributedDataParallel(discriminator1, device_ids=[gpu])
+    generator2 = nn.parallel.DistributedDataParallel(generator2, device_ids=[gpu])
+    discriminator2 = nn.parallel.DistributedDataParallel(discriminator2, device_ids=[gpu])
+
 
     ### Training
     # output paths
