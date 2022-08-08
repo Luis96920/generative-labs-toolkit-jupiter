@@ -14,9 +14,6 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description=desc)
 
-    # Warnings parameters
-    parser.add_argument('--warnings', type=str2bool, nargs='?', const=False, default=True, help="Show warnings")
-
     # Dataset parameters and input paths
     parser.add_argument('--n_classes', type=int, default=2, help='Number of segmented instances in the dataset. Eg. Character and background')
     parser.add_argument('--n_features', type=int, default=3, help='Number of channels. Eg. 3 for RGB')
@@ -57,6 +54,9 @@ def parse_args():
         parser.add_argument('--backend', type=str, help='distributed backend',
                         choices=[dist.Backend.GLOO, dist.Backend.NCCL, dist.Backend.MPI],
                         default=dist.Backend.NCCL)
+
+    # Warnings parameters
+    parser.add_argument('--warnings', type=str2bool, nargs='?', const=False, default=True, help="Show warnings")
 
 
     """ 
