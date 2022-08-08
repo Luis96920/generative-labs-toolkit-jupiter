@@ -50,7 +50,6 @@ def parse_args():
     parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N', help='Number of nodes')
     parser.add_argument('-g', '--gpus', default=1, type=int, help='Number of GPUs per node')
     parser.add_argument('-nr', '--nr', default=0, type=int, help='Ranking within the nodes')
-    #parser.add_argument('--device', type=str, default="auto", help='Device for training network. Options cpu, cuda or auto')
     if dist.is_available():
         parser.add_argument('--backend', type=str, help='distributed backend',
                         choices=[dist.Backend.GLOO, dist.Backend.NCCL, dist.Backend.MPI],
