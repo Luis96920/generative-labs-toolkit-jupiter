@@ -24,7 +24,8 @@ def parse_args():
     parser.add_argument('--input_inst_dir', type=str, default="01_segmented_input", help='Folder name for optional instances images located in input_path_dir') 
 
     # Training parameters
-    parser.add_argument('--epochs', type=int, default=200, help='The number of epochs')   
+    parser.add_argument('--epochs1', type=int, default=20, help='The number of epochs step 1')   
+    parser.add_argument('--epochs2', type=int, default=20, help='The number of epochs step 2')   
     parser.add_argument('--decay_after', type=int, default=200, help='Number of epochs with constant lr')   
     parser.add_argument('--lr', type=int, default=0.0005, help='Learning rate')   
     parser.add_argument('--beta_1', type=int, default=0.5, help='Parameter beta_1 for Adam optimizer') 

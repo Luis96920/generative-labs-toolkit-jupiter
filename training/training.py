@@ -100,6 +100,7 @@ def train_networks(gpu, args):
             [g1_optimizer, d1_optimizer],
             [g1_scheduler, d1_scheduler],
             args,
+            epochs=args.epochs1,
             stage='stage1',
             desc='Epoch loop G1',
         )
@@ -135,12 +136,13 @@ def train_networks(gpu, args):
         [g2_optimizer, d2_optimizer],
         [g2_scheduler, d2_scheduler],
         args,
+        epochs=args.epochs2,
         stage='stage2',
         desc='Epoch loop G2',
     )
 
 
-def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
+def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', desc=''):
 
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
@@ -172,7 +174,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
         d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
         print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
-    for epoch in tqdm(range(args.epochs-epoch_run), desc=desc, leave=True):
+    for epoch in tqdm(range(epochs-epoch_run), desc=desc, leave=True):
         # Training epoch
         # time
         since_load = time.time()
