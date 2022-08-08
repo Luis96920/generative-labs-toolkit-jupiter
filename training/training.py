@@ -142,7 +142,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
     generator, discriminator = generator.cuda(args.gpu), discriminator.cuda(args.gpu)
     if is_distributed():
-        encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[args.gpu])
+        encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[args.gpu]) if stage=='stage1' else encoder
         generator = nn.parallel.DistributedDataParallel(generator, device_ids=[args.gpu])
         discriminator = nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
     
