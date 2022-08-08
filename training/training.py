@@ -153,7 +153,6 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
 
-    #loss_fn = Loss(device=args.device)
     vgg_loss = VGG_Loss(gpu=args.gpu)
 
     # running variables
@@ -198,11 +197,10 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
             # and use NVIDIA apex for mixed/half precision training
             if has_autocast:
                 with torch.cuda.amp.autocast(enabled=True):
-                    print('Autocast working')
                     img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(
                         img_i, labels, insts, bounds, img_o, encoder, generator, discriminator)
 
-                    g_loss, d_loss = gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, 2, vgg_loss)
+                    g_loss, d_loss = gd_loss(fake_preds_for_g, real_preds_for_d, fake_preds_for_d, img_o_fake, img_o, discriminator.n_discriminators, vgg_loss)
                     img_o_fake = img_o_fake.detach()
             else:
                 img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d = forward_pass(

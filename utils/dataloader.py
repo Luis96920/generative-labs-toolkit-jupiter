@@ -18,7 +18,7 @@ def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, r
     loader = DataLoader(dataset, batch_size=batch_size,
                                   collate_fn=SwordSorceryDataset.collate_fn,
                                   num_workers=0, 
-                                  shuffle=False,
+                                  shuffle=(sampler is None),
                                   pin_memory=True,
                                   sampler=sampler)
    
