@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import time
 import os
 
@@ -222,8 +222,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
             mean_d_loss += d_loss.item() / args.display_step
 
             if cur_step % args.display_step == 0 and cur_step > 0:
-                print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'
-                      .format(cur_step, mean_g_loss, mean_d_loss))
+                #print('Step {}: Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step, mean_g_loss, mean_d_loss))
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
