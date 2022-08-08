@@ -159,7 +159,6 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
     # recover from checkpoint
     path_bkp_model = os.path.join(args.saved_model_path, 'bkp_model_' + stage + '.pth')
     if(args.resume_training and os.path.exists(path_bkp_model)):
-        print('Resume training: ' + str(args.resume_training))
         cp = torch.load(path_bkp_model)
         epoch_run = cp['epoch']
         #encoder.load_state_dict(cp['encoder_state_dict'])          # Load state of the last epoch
@@ -172,11 +171,11 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
         print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
-    for epoch in tqdm(range(epochs-epoch_run), desc=desc, leave=True):
+    for epoch in tqdm(range(epochs-epoch_run), desc=desc, leave=False):
         # Training epoch
         # time
         since_load = time.time()
-        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
+        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}', leave=True):
             img_i = img_i.cuda(args.gpu)
             labels = labels.cuda(args.gpu)
             insts = insts.cuda(args.gpu)
