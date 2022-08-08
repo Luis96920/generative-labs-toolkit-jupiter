@@ -57,9 +57,9 @@ def train_networks(gpu, args):
     ### Init train
     ## Phase 1: Low Resolution (1024 x 512)
     dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=rank)
-    encoder = Encoder(rgb_channels, n_features).cuda(gpu).apply(weights_init)
-    generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).cuda(gpu).apply(weights_init)
-    discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).cuda(gpu).apply(weights_init)
+    encoder = Encoder(rgb_channels, n_features).apply(weights_init)
+    generator1 = GlobalGenerator(dataloader1.dataset.get_input_size_g(), rgb_channels).apply(weights_init)
+    discriminator1 = MultiscaleDiscriminator(dataloader1.dataset.get_input_size_d(), n_discriminators=2).apply(weights_init)
 
     g1_optimizer = torch.optim.Adam(list(generator1.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d1_optimizer = torch.optim.Adam(list(discriminator1.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
@@ -68,21 +68,13 @@ def train_networks(gpu, args):
 
     ## Phase 2: High Resolution (2048 x 1024)
     dataloader2 = create_loaders(train_dir, target_width=args.target_width_2, batch_size=args.batch_size_2, n_classes=n_classes, world_size=args.world_size, rank=rank)
-    generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).cuda(gpu).apply(weights_init)
-    discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).cuda(gpu).apply(weights_init)
+    generator2 = LocalEnhancer(dataloader2.dataset.get_input_size_g(), rgb_channels).apply(weights_init)
+    discriminator2 = MultiscaleDiscriminator(dataloader2.dataset.get_input_size_d()).apply(weights_init)
 
     g2_optimizer = torch.optim.Adam(list(generator2.parameters()) + list(encoder.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     d2_optimizer = torch.optim.Adam(list(discriminator2.parameters()), lr=args.lr, betas=(args.beta_1, args.beta_2))
     g2_scheduler = torch.optim.lr_scheduler.LambdaLR(g2_optimizer, lr_lambda)
     d2_scheduler = torch.optim.lr_scheduler.LambdaLR(d2_optimizer, lr_lambda)
-
-    if is_distributed():
-        encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[gpu])
-        generator1 = nn.parallel.DistributedDataParallel(generator1, device_ids=[gpu])
-        discriminator1 = nn.parallel.DistributedDataParallel(discriminator1, device_ids=[gpu])
-        generator2 = nn.parallel.DistributedDataParallel(generator2, device_ids=[gpu])
-        discriminator2 = nn.parallel.DistributedDataParallel(discriminator2, device_ids=[gpu])
-
 
     ### Training
     # output paths
@@ -147,6 +139,11 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
     encoder, generator, discriminator = models
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
+
+    if is_distributed():
+        encoder = nn.parallel.DistributedDataParallel(encoder, device_ids=[args.gpu])
+        generator = nn.parallel.DistributedDataParallel(generator, device_ids=[args.gpu])
+        discriminator = nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
     
     n_discriminators = discriminator.module.n_discriminators if isinstance(discriminator, nn.parallel.DistributedDataParallel) else discriminator.n_discriminators 
 
@@ -174,16 +171,16 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         d_scheduler.load_state_dict(cp['d_scheduler_state_dict'])  
         print('Resuming script in epoch {}, {}.'.format(epoch_run,stage))     
 
-    for epoch in tqdm(range(epochs-epoch_run), desc=desc, leave=True):
+    for epoch in tqdm(range(epochs-epoch_run), desc=desc, leave=False):
         # Training epoch
         # time
         since_load = time.time()
         for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}'):
             img_i = img_i.cuda(args.gpu)
-            labels = labels.cuda(args.gpu)#to(args.device)
-            insts = insts.cuda(args.gpu)#to(args.device)
-            bounds = bounds.cuda(args.gpu)#to(args.device)
-            img_o = img_o.cuda(args.gpu)#to(args.device)
+            labels = labels.cuda(args.gpu)
+            insts = insts.cuda(args.gpu)
+            bounds = bounds.cuda(args.gpu)
+            img_o = img_o.cuda(args.gpu)
 
             # time
             time_elapsed_load = time.time() - since_load
@@ -279,5 +276,3 @@ def forward_pass(img_i, label_map, instance_map, boundary_map, img_o_real, encod
     real_preds_for_d = discriminator(torch.cat((boundary_map,label_map, img_o_real.detach()), dim=1))
 
     return img_o_fake, fake_preds_for_g, fake_preds_for_d, real_preds_for_d
-
-

@@ -91,9 +91,9 @@ def main():
         os.makedirs(os.path.join(args.output_path_dir, args.saved_model_path))
 
     # Multiprocessing
-    args.world_size = args.gpus * args.nodes                #
-    os.environ['MASTER_ADDR'] = 'localhost'              #
-    os.environ['MASTER_PORT'] = '8888'                      #
+    args.world_size = args.gpus * args.nodes
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '8888'
     mp.spawn(train_networks, nprocs=args.gpus, args=(args,))   
     
     #train_networks(args)

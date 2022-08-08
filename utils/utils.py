@@ -7,10 +7,6 @@ import os
 import argparse
 
 
-
-#CHECKPOINT_PATH = "model.checkpoint"
-
-
 def should_distribute(world_size):
     return dist.is_available() and world_size > 1
 
