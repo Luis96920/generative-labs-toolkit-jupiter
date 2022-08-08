@@ -43,8 +43,10 @@ def train_networks(gpu, args):
 
     # Multiprocesing
     #args.world_size = NODES * args.ngpus
-    #print(f'world size: {args.world_size}')
     rank = args.nr * args.gpus + gpu
+    print(f'world size: {args.world_size}')
+    print(f'rank: {rank}')
+
     if should_distribute(args.world_size):
         print('Using distributed PyTorch with {} backend'.format(args.backend))
         #dist.init_process_group(backend=args.backend, world_size=args.world_size, rank=args.rank)
@@ -72,7 +74,7 @@ def train_networks(gpu, args):
     #     SwordSorceryDataset(train_dir, target_width=args.target_width_1, n_classes=n_classes),
     #     collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_1, shuffle=True, drop_last=False, pin_memory=True,
     # )
-    dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=args.rank)
+    dataloader1 = create_loaders(train_dir, target_width=args.target_width_1, batch_size=args.batch_size_1, n_classes=n_classes, world_size=args.world_size, rank=rank)
     encoder = Encoder(rgb_channels, n_features).cuda(gpu).apply(weights_init)
     #generator1 = GlobalGenerator(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator1 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels, n_discriminators=2).to(args.device).apply(weights_init)
@@ -90,7 +92,7 @@ def train_networks(gpu, args):
     #     SwordSorceryDataset(train_dir, target_width=args.target_width_2, n_classes=n_classes),
     #     collate_fn=SwordSorceryDataset.collate_fn, batch_size=args.batch_size_2, shuffle=True, drop_last=False, pin_memory=True,
     # )
-    dataloader2 = create_loaders(train_dir, target_width=args.target_width_2, batch_size=args.batch_size_2, n_classes=n_classes, world_size=args.world_size, rank=args.rank)
+    dataloader2 = create_loaders(train_dir, target_width=args.target_width_2, batch_size=args.batch_size_2, n_classes=n_classes, world_size=args.world_size, rank=rank)
     #generator2 = LocalEnhancer(n_classes + n_features + 1, rgb_channels).to(args.device).apply(weights_init)
     #discriminator2 = MultiscaleDiscriminator(n_classes + 1 + rgb_channels).to(args.device).apply(weights_init)
     #HARCODED BECAUSE LABEL IMAGE!  n_classes=1
