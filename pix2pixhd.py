@@ -85,8 +85,8 @@ def main():
 
     # Multiprocessing
     args.world_size = args.gpus * args.nodes                #
-    #os.environ['MASTER_ADDR'] = '10.57.23.164'              #
-    #os.environ['MASTER_PORT'] = '8888'                      #
+    os.environ['MASTER_ADDR'] = 'localhost'              #
+    os.environ['MASTER_PORT'] = '8888'                      #
     env_dict = {
         key: os.environ[key]
         for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE")
