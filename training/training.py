@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
 import torch.distributed as dist
 
 from tqdm import tqdm
@@ -153,7 +152,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     g_optimizer, d_optimizer = optimizers
     g_scheduler, d_scheduler = schedulers
     
-    n_discriminators = discriminator.module.n_discriminators if isinstance(discriminator, nn.parallel.DistributedDataParallel) else discriminator.module.n_discriminators 
+    n_discriminators = discriminator.module.n_discriminators if isinstance(discriminator, nn.parallel.DistributedDataParallel) else discriminator.n_discriminators 
 
     vgg_loss = VGG_Loss(gpu=args.gpu)
 
