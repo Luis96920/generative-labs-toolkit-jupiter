@@ -72,7 +72,6 @@ def main():
     # warnings
     if args.warnings:
         warnings.filterwarnings("ignore")
-        print('No warnings')
 
     # Resume training and experiment name
     if (args.resume_training):
