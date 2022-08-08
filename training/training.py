@@ -35,7 +35,7 @@ def train_networks(gpu, args):
     n_classes = args.n_classes                  # total number of object classes # maybe we're not using n_classes, just args.n_classes
     rgb_channels = n_features = args.n_features       
     args.gpu = gpu
-    
+
     # Device conf, GPU and distributed computing
     # if args.device not in {'cuda', 'cpu'}:
     #     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -184,7 +184,7 @@ def train(dataloader, models, optimizers, schedulers, args, stage='', desc=''):
     g_scheduler, d_scheduler = schedulers
 
     #loss_fn = Loss(device=args.device)
-    vgg_loss = VGG_Loss(device=args.gpu)
+    vgg_loss = VGG_Loss(gpu=args.gpu)
 
     # running variables
     cur_step = 0
