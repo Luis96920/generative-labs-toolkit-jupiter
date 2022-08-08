@@ -13,8 +13,7 @@ def create_loaders(train_dir, target_width, batch_size, n_classes, world_size, r
     dataset = SwordSorceryDataset(train_dir, target_width=target_width, n_classes=n_classes)
 
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, drop_last=False) if is_distributed() else None
-    print('Sampler:')
-    print(sampler)
+    print(f'Sampler: {sampler}')
 
     loader = DataLoader(dataset, batch_size=batch_size,
                                   collate_fn=SwordSorceryDataset.collate_fn,
