@@ -175,7 +175,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
         # Training epoch
         # time
         since_load = time.time()
-        for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}', leave=True):
+        #for (img_i, labels, insts, bounds, img_o) in tqdm(dataloader, desc=f'  inner loop for epoch {epoch+epoch_run}', leave=True):
+        for (img_i, labels, insts, bounds, img_o) in dataloader:
             img_i = img_i.cuda(args.gpu)
             labels = labels.cuda(args.gpu)
             insts = insts.cuda(args.gpu)
