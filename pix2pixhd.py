@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument('--experiment_name', type=str, default="", help='A name for the experiment')
     parser.add_argument('--verbose', type=int, default=0, help='Display training time metrics. Yes: 1, No: 2')
     parser.add_argument('--display_step', type=int, default=100, help='Number of step to display images.')
+    parser.add_argument('--write_logs_step', type=int, default=100, help='Number of step to display images.')
     parser.add_argument('--resume_training', type=str2bool, nargs='?', const=True, default=False, help="Continue training allows to resume training. You'll need to add experiment name args to identify the experiment to recover.")
 
     # Output paths

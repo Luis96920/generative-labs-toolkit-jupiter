@@ -223,9 +223,9 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
 
             # Loss for TensorBoard 
-            mean_g_loss += g_loss.item() / 100
-            mean_d_loss += d_loss.item() / 100
-            if cur_step % 100 == 0 and cur_step > 0:
+            mean_g_loss += g_loss.item() / args.write_logs_step
+            mean_d_loss += d_loss.item() / args.write_logs_step
+            if cur_step % args.write_logs_step == 0 and cur_step > 0:
                 args.writer.add_scalar('Loss Generator', mean_g_loss, cur_step)
                 args.writer.add_scalar('Loss Discriminator', mean_d_loss, cur_step)
                 mean_g_loss = 0.0
