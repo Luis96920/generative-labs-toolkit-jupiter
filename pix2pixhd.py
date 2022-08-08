@@ -87,10 +87,6 @@ def main():
     args.world_size = args.gpus * args.nodes                #
     os.environ['MASTER_ADDR'] = 'localhost'              #
     os.environ['MASTER_PORT'] = '8888'                      #
-    env_dict = {
-        key: os.environ[key]
-        for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE")
-    }
     mp.spawn(train_networks, nprocs=args.gpus, args=(args,))   
     
     #train_networks(args)
