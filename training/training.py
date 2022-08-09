@@ -135,6 +135,17 @@ def train_networks(gpu, args):
         desc='Epoch loop G2',
     )
 
+    torch.save({
+                # Networks states
+                #'encoder_state_dict': encoder.state_dict(),
+                'generator_state_dict': generator2.state_dict(),
+                'discriminator_state_dict': discriminator2.state_dict(),
+            }, os.path.join(args.saved_model_path, 'pix2pixHD_model.pth'))
+
+
+    return print("done training")
+
+
 
 def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', desc=''):
 
@@ -266,6 +277,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
                 'g_scheduler_state_dict': g_scheduler.state_dict(),
                 'd_scheduler_state_dict': d_scheduler.state_dict(),
             }, path_bkp_model)
+
 
 
 def weights_init(m):

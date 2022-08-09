@@ -98,7 +98,6 @@ def main():
     mp.spawn(train_networks, nprocs=args.gpus, args=(args,))   
     
     #train_networks(args)
-    print("done training")
 
 
 if __name__ == '__main__':
