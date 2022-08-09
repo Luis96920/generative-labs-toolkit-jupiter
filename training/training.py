@@ -154,7 +154,7 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
 
     # Tensorboard
     args.writer = SummaryWriter(log_dir=os.path.join(args.output_path_dir, args.saved_history_path),
-                       filename_suffix=args.experiment_name + '_' + stage
+                       #filename_suffix=args.experiment_name + '_' + stage
                       )
 
     # running variables
@@ -222,17 +222,6 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
             if cur_step % args.display_step == 0 and cur_step > 0:
                 save_tensor_images(img_o_fake.to(img_o.dtype), img_o, epoch+epoch_run, stage, cur_step, args.saved_images_path)
 
-            # Loss for TensorBoard 
-            mean_g_loss += g_loss.item() / args.write_logs_step
-            mean_d_loss += d_loss.item() / args.write_logs_step
-            if cur_step % args.write_logs_step == 0 and cur_step > 0:
-                args.writer.add_scalar('Loss Generator', mean_g_loss, cur_step)
-                args.writer.add_scalar('Loss Discriminator', mean_d_loss, cur_step)
-                mean_g_loss = 0.0
-                mean_d_loss = 0.0
-
-            cur_step += 1
-
             # time 
             time_elapsed_training = time.time() - since_training
             since_load = time.time()
@@ -241,6 +230,20 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
                 time_elapsed_load // 60, time_elapsed_load % 60, 60*time_elapsed_load % 60))
                 print('Training complete in {:.0f}m {:.0f}s {:.0f}ms'.format(
                 time_elapsed_training // 60, time_elapsed_training % 60, 60*time_elapsed_training % 60))
+                
+            # Loss for TensorBoard 
+            mean_g_loss += g_loss.item() / args.write_logs_step
+            mean_d_loss += d_loss.item() / args.write_logs_step
+            if cur_step % args.write_logs_step == 0 and cur_step > 0:
+                args.writer.add_scalar(f'Loss Generator {stage}', mean_g_loss, cur_step)
+                args.writer.add_scalar(f'Loss Discriminator {stage}', mean_d_loss, cur_step)
+                args.writer.add_scalar(f'Epoch {stage}', epoch, time_elapsed_training)
+                mean_g_loss = 0.0
+                mean_d_loss = 0.0
+
+            cur_step += 1
+
+
 
         g_scheduler.step()
         d_scheduler.step()    
