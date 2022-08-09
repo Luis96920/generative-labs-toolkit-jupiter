@@ -235,8 +235,8 @@ def train(dataloader, models, optimizers, schedulers, args, epochs, stage='', de
             mean_g_loss += g_loss.item() / args.write_logs_step
             mean_d_loss += d_loss.item() / args.write_logs_step
             if cur_step % args.write_logs_step == 0 and cur_step > 0:
-                args.writer.add_scalar('Loss Generator', mean_g_loss, cur_step)
-                args.writer.add_scalar('Loss Discriminator', mean_d_loss, cur_step)
+                args.writer.add_scalar(f'Loss Generator {stage}', mean_g_loss, cur_step)
+                args.writer.add_scalar(f'Loss Discriminator {stage}', mean_d_loss, cur_step)
                 #args.writer.add_scalar(f'Epoch {stage}', epoch, time_elapsed_training)
                 mean_g_loss = 0.0
                 mean_d_loss = 0.0
