@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+
+{% block styles %}
+<!-- Bootstrap CSS -->
+{{ super() }}
+<link rel="stylesheet" href="/static/css/login.css">
+{% endblock %}
+
+
+{% block content %}
+
+<div class="sidenav">
+    <div class="login-main-text">
+       <h2>Media Monks<br> Generative Labs</h2>
+       <p>Account Request Form </p>
+    </div>
+ </div>
+ <div class="main">
+    <div class="col-md-6 col-sm-12">
+       <div class="login-form">
+          <form>
+            <div class="form-group">
+               <label>Full Name</label>
+               <input type="text" class="form-control mb-2" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+               <label>Department</label>
+               <input type="text" class="form-control mb-2" placeholder="Department">
+            </div>
+             <div class="form-group">
+                <label>Email</label>
+                <input type="text" class="form-control mb-2" placeholder="Email">
+             </div>
+             <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control mb-2" placeholder="Password">
+             </div>
+             <button type="submit" class="btn btn-primary">Account Request</button>
+             <a href="{{url_for('login')}}" class="btn btn-secondary">Go Back</a>
+          </form>
+
+       </div>
+    </div>
+ </div>
+
+{% endblock %}

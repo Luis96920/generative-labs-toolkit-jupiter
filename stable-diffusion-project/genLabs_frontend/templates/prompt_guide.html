@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ super() }}
+
+
+
+
+
+                <div class="card" data-v-c005665a="">
+                    <div class="card-body p-lg-17 page-content" data-v-c005665a="" style="padding: 90px;">
+                        <h2 data-v-c005665a="">Basics of Prompt Engineering</h2>
+                        <p data-v-c005665a="">Today I propose a simple formula for beginners to use and create better
+                            generations with text to image AI. This was tested on stable diffusion but it should work on
+                            any model if it was trained on enough art data.</p>
+                        <p data-v-c005665a="">After reading this document and applying these simple steps, you’ll be
+                            able to generate better images with the same amount of effort.</p><br data-v-c005665a="">
+                        <h3 data-v-c005665a="">1. Raw prompt</h3>
+                        <p data-v-c005665a="">Raw prompt is the simplest way of describing what you want to generate,
+                            for instance; </p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">Panda</li>
+                            <li data-v-c005665a="">A warrior with a sword</li>
+                            <li data-v-c005665a="">Skeleton</li>
+                        </ol>
+                        <p data-v-c005665a="">This is the basic building block of any prompt. Most new people start by
+                            only using raw prompts, this is usually a mistake as the images you generate like this tend
+                            to get random and chaotic. Here are some examples that I generated with running the earlier
+                            prompts </p><br data-v-c005665a="">
+                        <!-- <p data-v-c005665a=""><img style="max-width:80%;margin:30px auto;display:block;"
+                                src="/media/images/prompt-guide-example.png" data-v-c005665a=""></p><br
+                            data-v-c005665a=""> -->
+                        <p data-v-c005665a="">As you can see, these images have random scenery and don’t look very
+                            aesthetically pleasing, I definitely wouldn’t consider them art. This brings me to my next
+                            point; </p><br data-v-c005665a="">
+                        <h3 data-v-c005665a="">2. Style</h3>
+                        <p data-v-c005665a="">Style is a crucial part of the prompt. The AI, when missing a specified
+                            style, usually chooses the one it has seen the most in related images, for example, if I
+                            generated landscape, it would probably generate realistic or oil painting looking images.
+                            Having a well chosen style + raw prompt is sometimes enough, as the style influences the
+                            image the most right after the raw prompt. </p>
+                        <p data-v-c005665a="">The most commonly used styles include:</p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">Realistic</li>
+                            <li data-v-c005665a="">Oil painting</li>
+                            <li data-v-c005665a="">Pencil drawing</li>
+                            <li data-v-c005665a="">Concept art</li>
+                        </ol>
+                        <p data-v-c005665a="">I’ll examine them one by one to give an overview on how you might use
+                            these styles.</p>
+                        <p data-v-c005665a="">In the case of a realistic image, there are various ways of making it the
+                            style, most resulting in similar images. Here are some commonly used techniques of making
+                            the image realistic: </p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">a photo of + raw prompt</li>
+                            <li data-v-c005665a="">a photograph of + raw prompt</li>
+                            <li data-v-c005665a="">raw prompt, hyperrealistic</li>
+                            <li data-v-c005665a="">raw prompt, realistic</li>
+                        </ol>
+                        <p data-v-c005665a="">You can of course combine these to get more and more realistic images.</p>
+                        <p data-v-c005665a="">To get oil painting you can just simply add “an oil painting of” to your
+                            prompt. This sometimes results in the image showing an oil painting in a frame, to fix this
+                            you can just re-run the prompt or use raw prompt + “oil painting”</p>
+                        <p data-v-c005665a="">To make a pencil drawing just simply add “a pencil drawing of” to your raw
+                            prompt or make your prompt raw prompt + “pencil drawing”.</p>
+                        <p data-v-c005665a="">The same applies to landscape art.</p><br data-v-c005665a=""><br
+                            data-v-c005665a="">
+                        <h3 data-v-c005665a="">3. Artist</h3>
+                        <p data-v-c005665a="">To make your style more specific, or the image more coherent, you can use
+                            artists’ names in your prompt. For instance, if you want a very abstract image, you can add
+                            “made by Pablo Picasso” or just simply, “Picasso”.</p>
+                        <p data-v-c005665a="">Below are lists of artists in different styles that you can use, but I
+                            always encourage you to search for different artists as it is a cool way of discovering new
+                            art. </p>
+                        <p data-v-c005665a="">Portrait</p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">John Singer Sargent </li>
+                            <li data-v-c005665a="">Edgar Degas</li>
+                            <li data-v-c005665a="">Paul Cézanne </li>
+                            <li data-v-c005665a="">Jan van Eyck </li>
+                        </ol>
+                        <p data-v-c005665a="">Oil painting</p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">Leonardo DaVinci </li>
+                            <li data-v-c005665a="">Vincent Van Gogh </li>
+                            <li data-v-c005665a="">Johannes Vermeer </li>
+                            <li data-v-c005665a="">Rembrandt </li>
+                        </ol>
+                        <p data-v-c005665a="">Pencil/Pen drawing</p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">Albrecht Dürer </li>
+                            <li data-v-c005665a="">Leonardo da Vinci </li>
+                            <li data-v-c005665a="">Michelangelo</li>
+                            <li data-v-c005665a="">Jean-Auguste-Dominique Ingres </li>
+                        </ol>
+                        <p data-v-c005665a="">Landscape art </p>
+                        <ol data-v-c005665a="">
+                            <li data-v-c005665a="">Thomas Moran </li>
+                            <li data-v-c005665a="">Claude Monet </li>
+                            <li data-v-c005665a="">Alfred Bierstadt </li>
+                            <li data-v-c005665a="">Frederic Edwin Church </li>
+                        </ol>
+                        <p data-v-c005665a="">Mixing the artists is highly encouraged, as it can lead to
+                            interesting-looking art. </p><br data-v-c005665a=""><br data-v-c005665a="">
+                        <h3 data-v-c005665a="">4. Finishing touches</h3>
+                        <p data-v-c005665a="">This is the part that some people take to extremes, leading to longer
+                            prompts than this article. Finishing touches are the final things that you add to your
+                            prompt to make it look like you want. For instance, if you want to make your image more
+                            artistic, add “trending on artstation”. If you want to add more realistic lighting add
+                            “Unreal Engine.” You can add anything you want, but here are some examples: </p>
+                        <p data-v-c005665a="">Highly detailed, surrealism, trending on art station, triadic color
+                            scheme, smooth, sharp focus, matte, elegant, the most beautiful image ever seen,
+                            illustration, digital paint, dark, gloomy, octane render, 8k, 4k, washed colors, sharp,
+                            dramatic lighting, beautiful, post processing, picture of the day, ambient lighting, epic
+                            composition</p><br data-v-c005665a=""><br data-v-c005665a="">
+                        <h3 data-v-c005665a="">5. Conclusion</h3>
+                        <p data-v-c005665a="">Prompt engineering allows you to have better control of what the image
+                            will look like. It (if done right) improves the image quality by a lot in every aspect.</p>
+                        <p data-v-c005665a=""></p><br data-v-c005665a="">
+                        </p><br data-v-c005665a=""><br data-v-c005665a="">
+
+                    </div>
+                </div>
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

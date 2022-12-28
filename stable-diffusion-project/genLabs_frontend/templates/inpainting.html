@@ -1,0 +1,208 @@
+
+  {% extends "base.html" %}
+
+  {% block styles %}
+  
+  {{ super() }}
+  <link rel="stylesheet" href="static/css/inpainting.css">
+  {% endblock %}
+  
+  
+  {% block content %}
+  {{ super() }}
+
+
+<body id="body">
+  <div id="inpainting_page">
+    <div id="page_container" class="container">
+
+
+      <div id="to_settings" class="col-sm-2">
+      </div>
+      <div id="middle_col" class="col-sm-2">
+        <div id="canvas_col" class="col-xs-8">
+          <div id="canvas_div"><canvas id="canvas"></canvas></div>
+        </div>
+      </div>
+      <div id="right_col" class="col-sm-2">
+      </div>
+    </div>
+    <div id="prompt-row" class="row">
+      <div class="col"></div>
+      <div class="col"></div>
+      <div class="col">
+        <div style="margin: auto;">
+          <button id=done type="button" sytle="display:show" class="btn btn-primary btn-sm">Click when done assigning
+            points</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFF canvas Settings LEFT -->
+    <div class="row-flex mt-2">
+
+      <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions"
+        aria-labelledby="offcanvasWithBothOptionsLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Settings</h5>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body" id="offcanvas-body">
+
+          <div class="container">
+            <h3>Canvas Settings</h3>
+            <ul class="list-group list-group-flush mx-n2">
+
+
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <label for="input_transparency" class="form-label">Transparency</label>
+                  <input type="range" value="0" class="form-range" oninput="this.nextElementSibling.value = this.value"
+                    min="0" max="1" step="0.1" id="input_transparency">
+                  <output>0</output>
+                </div>
+
+                <div class="ms-2 me-auto">
+                  <label for="input_linewidth" class="form-label">Line width</label>
+                  <input type="range" value="2" class="form-range" oninput="this.nextElementSibling.value = this.value"
+                    min="1" max="20" step="2" id="input_linewidth">
+                  <output>2</output>
+                </div>
+              </li>
+
+
+
+
+              <h3 class="h6 mt-3">Tool Selection</h3>
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <button id="input_eraser" class="btn btn-secondary"><i class="fa-solid fa-eraser"></i></button>
+                <button id="input_pencil" class="btn btn-secondary"><i class="fa-solid fa-pencil"></i></button>
+                <button id="input_polygon" class="btn btn-secondary"><i class="fa-solid fa-draw-polygon"></i></button>
+                <button id="input_square" class="btn btn-secondary"><i class="fa-regular fa-square"></i></button>
+                <button class="btn btn-secondary" onclick="$('#input_color').click();"><i
+                    class="fa-solid fa-palette"></i></button>
+                <input class="cp" type="color" id="input_color" value="#000000">
+              </li>
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto" id="n_iters_radios">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" role="switch" id="input_layer_0" value=0>
+                    <label class="form-check-label" for=input_layer_0>Layer 0</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" role="switch" checked="" id="input_layer_1" value=1>
+                    <label class="form-check-label" for=input_layer_1>Layer 1</label>
+                  </div>
+                </div>
+              </li>
+
+            </ul>
+          </div>
+          <br>
+          <!-- UPLOAD FILE -->
+          <div class="input-group w-100">
+            <input type="file" class="form-control" id="input_file" aria-describedby="inputGroupFileAddon04"
+              aria-label="Upload">
+            <button class="btn btn-outline-secondary" type="button" id="btn-upload">To Canvas</button>
+          </div>
+          <br>
+          <div class="container">
+            <h3>Model Settings</h3>
+            <ul class="list-group list-group-flush mx-n2">
+
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <label for="input_strenght" class="form-label">Strenght</label>
+                  <input type="range" value="0.8" class="form-range"
+                    oninput="this.nextElementSibling.value = this.value" min="0" max="1" step="0.1" id="input_strenght">
+                  <output>0.8</output>
+                </div>
+
+                <div class="ms-2 me-auto">
+                  <label for="input_steps" class="form-label">Steps</label>
+                  <input type="range" value="20" class="form-range" oninput="this.nextElementSibling.value = this.value"
+                    min="0" max="50" step="5" id="input_steps">
+                  <output>2</output>
+                </div>
+              </li>
+
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <label for="input_samples" class="form-label">Samples</label>
+                  <input type="range" value="1" class="form-range" oninput="this.nextElementSibling.value = this.value"
+                    min="1" max="4" step="1" id="input_samples">
+                  <output>1</output>
+                </div>
+
+                <div class="ms-2 me-auto">
+                  <label for="input_iterations" class="form-label">Iterations</label>
+                  <input type="range" value="1" class="form-range" oninput="this.nextElementSibling.value = this.value"
+                    min="1" max="4" step="1" id="input_iterations">
+                  <output>1</output>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+
+
+    <!-- OFF canvas Settings RIGHT -->
+    <div class="row-flex mt-2">
+
+      <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptionsLeft"
+        aria-labelledby="offcanvasWithBothOptionsLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Settings</h5>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body" id="offcanvas-body">
+
+          <div class="container">
+            <h3>Image Settings</h3>
+            <ul class="list-group list-group-flush mx-n2">
+
+
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <a id="img_download" class ="btn btn-primary" href="#" download>Download Image</a>
+
+                </div>
+
+                <div class="ms-2 me-auto">
+                  <a id="mask_download" class ="btn btn-primary" href="#" download>Download Mask</a>
+
+                </div>
+              </li>
+            </ul>
+            <input class="btn btn-primary" type="button" value="Stage" id="btn" size="30" onclick="stage()">
+            <img id="maskImage" style="display: none;">
+            <img id="backImage" style="display: none;">
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+  </div>
+
+</body>
+
+
+{% endblock %}
+
+{% block scripts %}  
+{{ super() }}
+
+
+
+<script src="static/inpainting.js">
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block styles %}
+
+{{ super() }}
+
+<link rel="stylesheet" href="/static/css/loader.css">
+
+
+{% endblock %}
+
+<div id="loader"></div>
+
+<div id="content">
+{% block content %}
+
+
+{{ super() }}
+
+
+  
+  <!-- Outer container, full page width and height, red border -->
+  <div class="container-fluid d-flex justify-content-center align-items-center" style="height:80vh; overflow:hidden; ">
+  
+  <!-- Inner row, half the width and height, centered, blue border -->
+  <div class="row text-center d-flex align-items-center" style="overflow:hidden; width:70vw; height:70vh">
+  
+  <!-- Innermost text, wraps automatically, automatically centered -->
+
+  <div class="d-flex text-center mt-5">
+    <div class="card-group">
+      <div class="card" style="width: 18rem;">
+        <img src="/static/images/creative_labs.png" class="card-img-top mt-2" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">Text to Image</h5>
+          <p class="card-text">Write a prompt and get inspired</p>
+          <a href="{{url_for('inspire')}}" class="btn btn-me btn-block btn-primary mt-auto">Inspire</a>
+        </div>
+      </div>
+      <div class="card ms-4" style="width: 18rem;">
+        <img src="/static/images/genLabs2.png" class="card-img-top mt-2" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">Image to Image</h5>
+          <p class="card-text">Image to Image Algorithms</p>
+          <a href="{{url_for('img2img')}}" class="btn btn-me btn-block btn-primary mt-auto">Dream</a>
+        </div>
+      </div>
+      <div class="card ms-4" style="width: 18rem;">
+        <img src="/static/images/inpainting.png" class="card-img-top mt-2" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">Inpainting</h5>
+          <p class="card-text">Editing part of images using AI</p>
+          <a href="{{url_for('inpainting')}}" class="btn btn-me btn-block btn-primary mt-auto">Edit</a>
+        </div>
+      </div>
+      <div class="card ms-4" style="width: 18rem;">
+        <img src="/static/images/robo_baloon.png" class="card-img-top mt-2" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">Galery</h5>
+          <p class="card-text">See your creations and prompts</p>
+          <a href="{{url_for('my_gallery')}}" class="btn btn-me btn-block btn-primary mt-auto" >Curate</a>
+        </div>
+      </div>
+      <div class="card ms-4" style="width: 18rem;">
+        <img src="/static/images/prompt.png" class="card-img-top mt-2" alt="...">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">Prompt</h5>
+          <p class="card-text">Prompt Examples - Guide</p>
+          <a href="{{url_for('prompt_guide')}}" class="btn btn-me btn-block btn-primary mt-auto">Write</a>
+        </div>
+      </div>
+      </div>
+    </div>
+  
+  </div> <!-- Inner row -->
+  </div> <!-- Outer container -->
+  
+
+
+
+  {% endblock %}
+
+</div>
+
+{% block scripts %}
+{{super()}}
+<!-- <script>
+
+var loader;
+
+function loadNow(opacity) {
+    if (opacity <= 0) {
+        displayContent();
+    } else {
+        loader.style.opacity = opacity;
+        window.setTimeout(function() {
+            loadNow(opacity - 0.01);
+        }, 500);
+    }
+}
+
+function displayContent() {
+    loader.style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+}
+loadNow(10);
+// document.addEventListener("DOMContentLoaded", function() {
+//     loader = document.getElementById('loader');
+//     loadNow(1);
+// });
+</script> -->
+
+{% endblock %}

@@ -1,0 +1,309 @@
+
+  {% extends "base.html" %}
+
+  {% block styles %}
+  
+  {{ super() }}
+  <link rel="stylesheet" href="static/css/canvas.css">
+  {% endblock %}
+  
+  
+  {% block content %}
+  {{ super() }}
+
+<body onload= "init();">
+
+      <div id="global_container"   class="container-flex">
+
+        <!-- DEV ####### -->
+        <div id="param_selector"class="card mb-4 ">
+          <div class="card-body">
+            <h3 class="h6">Color Selection</h3>
+            <ul class="list-group list-group-flush mx-n2">
+             <li class="list-group-item px-0 d-flex justify-content-between align-items-start"> 
+              <li><input id="input_color" type="color"></li>
+              </li>
+              <h3 class="h6 mt-3">Size</h3>
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <li><input id="input_range" type="range" min="3" max="20" >
+              </li> 
+              <h3 class="h6 mt-3">Strenght</h3>
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <li><input id="input_strenght" type="range" min="0.1" max="1" step="0.1" value="0.8" >
+              </li> 
+
+              <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <span>Eraser</span>
+                <li><input id="input_eraser" type="checkbox" >
+              </li>
+
+            </ul>
+          </div>
+        </div>
+        
+<!-- OK -->
+
+      <!-- <div class="row">
+        <div id="paint_selectors"class="col">
+          <ul>
+            <span>Color</span>
+            <li><input id="input_color" type="color"></li>
+            <span>Size</span>
+            <li><input id="input_range" type="range" min="3" max="20" >
+            </li>
+            <span>Eraser</span>
+            <li><input id="input_eraser" type="checkbox" >
+            </li>
+          </ul>
+  
+        </div>
+      </div> -->
+      <div class="row">
+      <div class="col">
+        <div class="row_img">
+
+          <canvas  id="can">
+          </canvas>
+
+        </div>
+
+        <div class="row_btn">
+          <input class="btn btn-primary" type="file" value="Upload" id="btn-upload">
+
+          
+          <input class="btn btn-primary" type="button" value="Stage" id="btn" size="30" onclick="stage()">
+          <input class="btn btn-primary" type="button" value="Clear" id="clr" size="30" onclick="erase()">
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="row_img">
+
+          <canvas id="canvasimg"></canvas>
+          <div id="image">
+          <img id="result_image">
+          </div>
+        </div>
+  
+        <div id="saved_img_btns" class="row_btn">
+          <a id="a_download" class ="btn btn-primary" href="#" download>Download</a>
+        </div>
+
+      </div>
+    </div>
+    </div>
+
+    <div class='container mt-2'>
+      <div class="'row mb-3">
+        <div class="form-group">
+          <input type="text" class="form-control" id="prompt" placeholder="Create">
+        </div>
+        <button class="btn btn-primary mt-3" onclick="send_img();">Inspire</button>
+        <div class="d-flex justify-content-center mt-3 " >
+          <div id="spinner" class="spinner-border text-secondary" role="status" style="visibility:hidden; animation-duration:10s;">
+          </div>
+          </div>
+      </div>
+    </div>
+</div>
+  
+  </body>
+
+
+{% endblock %}
+
+{% block scripts %}  
+{{ super() }}
+<script>
+
+
+var canvas, canvasimg, backgroundImage, finalImg;
+var	mouseClicked = false;
+var prevX = 0;
+var currX = 0;
+var prevY = 0;
+var currY = 0;
+
+var globalCompositeOperation = "source-over";
+
+
+// upload image
+$("#btn-upload").change(function(event) {
+    img_url = URL.createObjectURL(event.target.files[0]);
+    backgroundImage = new Image();
+    backgroundImage.src = img_url;
+    canvas.style.backgroundImage = "url('" + img_url + "')"
+  });
+
+
+$(document).on("change" , "#input_color" , function(){
+  fillStyle = $(this).val()
+  globalCompositeOperation = "source-over";
+});
+
+$(document).on("change" , "#input_range" , function(){
+  lineWidth = $(this).val()
+});
+
+$(document).on("change", "#input_eraser", function(){
+    globalCompositeOperation = 'destination-out';
+    // globalCompositeOperation = 'destination-in';
+    fillStyle = "rgba(0,0,0,1)";
+    lineWidth = 14;
+})
+
+function getData(){
+  data = {{data|safe}};
+  return data
+};
+
+function init() {
+    var data = getData();
+    var imageSrc = data.img_to_edit;
+    backgroundImage = new Image();
+    backgroundImage.src = imageSrc;
+    canvas = document.getElementById('can');
+    canvas.setAttribute('width', canvas.parentNode.offsetWidth);
+    canvas.setAttribute('height', canvas.parentNode.offsetHeight);
+    finalImg = document.getElementById('result_image');
+    canvasimg = document.getElementById('canvasimg');
+    canvas.style.backgroundImage = "url('" + imageSrc + "')";
+    fillStyle = document.getElementById("input_color").value
+    lineWidth = parseInt(document.getElementById("input_range").value)
+    canvas.addEventListener("mousemove", handleMouseEvent);
+    canvas.addEventListener("mousedown", handleMouseEvent);
+    canvas.addEventListener("mouseup", handleMouseEvent);
+    canvas.addEventListener("mouseout", handleMouseEvent);
+  }
+
+  function handleMouseEvent(e) {
+    if (e.type === 'mousedown') {
+      prevX = currX;
+      prevY = currY;
+      currX = e.offsetX;
+      currY = e.offsetY;
+      mouseClicked = true;
+      draw(true);
+    }
+    if (e.type === 'mouseup' || e.type === "mouseout") {
+      mouseClicked = false;
+    }
+    if (e.type === 'mousemove') {
+      if (mouseClicked) {
+        prevX = currX;
+        prevY = currY;
+        currX = e.offsetX;
+        currY = e.offsetY;
+        draw();
+      }
+    }
+  }
+
+  function draw(dot) {
+    var ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.globalCompositeOperation = globalCompositeOperation;
+    if(dot){
+      ctx.fillStyle = fillStyle;
+      ctx.fillRect(currX, currY, 2, 2);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.arc(currX, currY, lineWidth*3, 0, Math.PI*2, false)
+      ctx.fill()
+    }
+    ctx.closePath();
+  }
+
+  function erase() {
+    if (confirm("Want to clear")) {
+      var ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var data = getData();
+      var imageSrc = data.img_to_edit;
+      canvas.style.backgroundImage = "url('" + imageSrc + "')";
+      var ctx2 = canvasimg.getContext("2d");
+      ctx2.clearRect(0, 0, canvasimg.width, canvasimg.height);
+      document.getElementById("canvasimg").style.display = "none";
+      document.getElementById("result_image").style.display = "none";
+      document.getElementById("saved_img_btns").style.display='none'
+
+    }
+  }
+  
+  function stage() {
+
+    canvasimg.width = canvas.width;
+    canvasimg.height = canvas.height;
+    var ctx2 = canvasimg.getContext("2d");
+    // comment next line to save the draw only
+    ctx2.drawImage(backgroundImage, 0, 0);
+    ctx2.drawImage(canvas, 0, 0);
+    finalImg = document.getElementById('result_image')
+    finalImg.src = canvasimg.toDataURL();
+    document.getElementById("a_download").href = canvasimg.toDataURL();
+    document.getElementById("saved_img_btns").style.display='flex'
+    // finalImg.style.display = "flex";
+    document.getElementById("result_image").style.display = "flex";
+  }
+
+
+function send_img() {
+
+    let spinner = document.getElementById("spinner");
+        spinner.style.visibility = 'visible'; 
+    var dataURL = document.getElementById('result_image').src;
+    var strenght = document.getElementById('input_strenght').value
+    var entry = {
+        'imageBase64': dataURL, 
+        "prompt":document.getElementById("prompt").value,
+        "job_type":"img2img",
+        'strenght':strenght
+      };
+      console.log(entry)
+      fetch(`${window.origin}/submit_job`, {
+              method: "POST",
+              credentials: "include",
+              body: JSON.stringify(entry),
+              cache:"no-cache",
+              headers: new Headers({
+                "content-type":"application/json"
+              })
+            })      
+            .then(function (response){
+          if (response.status !== 200) {
+            console.log(`Response status was not 200 ${response.status}`);
+          }
+          response.json()
+        .then(function (data) {
+          
+          fetch(`${window.origin}/get_images`, {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify(data),
+          cache:"no-cache",
+          headers: new Headers({
+            "content-type":"application/json"
+                  })
+        }).then(function (response){
+        if (response.status !== 200) {
+          console.log(`Response status was not 200 ${response.status}`);
+        }
+        response.json().then(function (data) {
+          
+          $(image).replaceWith(data);
+          document.getElementById("image").style.display = "flex";
+          document.getElementById("result_image").style.display = "flex";
+          spinner.style.visibility = 'hidden'; 
+        })
+      })
+  }
+  )}
+  )}
+
+
+
+
+</script>
+
+{% endblock %}

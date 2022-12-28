@@ -1,0 +1,91 @@
+<html lang="en">
+    <head>
+        {% block head %}
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <script src="https://kit.fontawesome.com/f582d85cc5.js" crossorigin="anonymous"></script>
+
+        {% block styles %}
+            <!-- Bootstrap CSS -->
+            {{ bootstrap.load_css() }}
+            <link rel="stylesheet" href="/static/css/style.css">
+            <link rel="stylesheet" href="/static/css/footer.css">
+            
+
+        {% endblock %}
+
+
+        <title>GenerativeLabs V1</title>
+        {% endblock %}
+
+
+    </head>
+    <body class="d-flex flex-column min-vh-100">
+
+          
+        <!-- Your page content -->
+        {% block content %}
+        <div class="navbar navbar-dark bg-dark">
+            <a class="navbar-brand ps-2"  href="{{url_for('home')}}">Media Monks</a>
+            <button class="navbar-toggler pe-4 me-4" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" name ="navbarText" id="navbarText" >
+              <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                  <a class="nav-link ps-2" href="{{url_for('home')}}">Home </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('inspire')}}">Text to Image</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('img2img')}}">Image to Image</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('inpainting')}}">Inpainting</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('my_gallery')}}">My Galery</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('prompt_guide')}}">Prompt Guide</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link ps-2" href="{{url_for('logout')}}">Logout</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+
+          {% endblock %}
+
+<!-- footer -->
+<div class="footer-bs mt-auto">
+  <footer>
+      <div class="container">
+          <p class="copyright">GenLabs v1</p>
+      </div>
+  </footer>
+</div>
+
+
+
+
+
+
+        {% block scripts %}
+            <!-- Optional JavaScript -->
+            {{ bootstrap.load_js() }}
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+
+        {% endblock %}
+
+{% block footer %}
+
+{% endblock%}
+
+</body>
+</html>

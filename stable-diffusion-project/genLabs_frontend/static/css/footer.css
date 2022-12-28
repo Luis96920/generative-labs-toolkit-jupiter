@@ -1,0 +1,13 @@
+
+
+.footer-bs{
+	position: end;
+	width: 100%;
+	min-height: 10px;
+	/* vertical-align: bottom; */
+	/* bottom: 0px; */
+	left: 0;
+	background-color: rgba(33,37,41, 1);
+	color :rgba(255, 243, 243, 0.835);
+	/* display: flex; */
+}

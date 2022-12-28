@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ super() }}
+
+<div class="container-fluid">
+
+    <div class="container">
+      <!-- Title -->
+      <div class="d-flex justify-content-between align-items-lg-center py-3 flex-column flex-lg-row">
+        <h2 class="h5 mb-3 mb-lg-0"><a href="" class="text-muted"><i class="bi bi-arrow-left-square me-2"></i></a> Hello {{ session.user }} - Let's get inspired</h2>
+      </div>
+    
+      <!-- Main content -->
+      <div class="row">
+
+
+        <!-- Left side -->
+        <div class="col-lg-8">
+          <!-- Basic information -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="h6 mb-4">Text to Image</h3>
+              <div class="row">
+
+       
+                      <!-- Imagen -->
+                      
+                        <div id="image" class="text-center">
+                        <img src="{{ img }}" onerror="this.onerror=null;this.src='imagefound.gif';" class="rounded" width="512" height="512">
+                        </div>
+                        
+                        <div class="d-flex justify-content-center mt-3 " >
+                        <div id="spinner" class="spinner-border text-secondary" role="status" style="visibility:hidden; animation-duration:10s;">
+                        </div>
+                        </div>
+                        
+
+
+
+              </div>
+
+             </div>
+                                <!-- prompt -->
+                        <div class='container'>
+                          <div class="'row mb-3">
+                            <div class="form-group">
+                              <input type="text" class="form-control" id="prompt" placeholder="Create">
+                            </div>
+                            <button class="btn btn-primary mt-3" onclick="submit_job();">Inspire</button>
+                          </div>
+                        </div>
+                    </div>
+
+
+
+
+
+        </div>
+
+        <!-- Right side -->
+        <div class="col-lg-4">
+          <!-- Sampler -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="h6">Sampler</h3>
+
+              <select class="form-select">
+                {% for sampler in context.sampler %}
+                <option value="{{ sampler }}" selected="">{{sampler}}</option>
+                {% endfor %}
+
+              </select>
+            </div>
+          </div>
+          <!-- Steps -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="h6">Steps</h3>
+              <label for="steps" class="form-label">ddim steps</label>
+              <input type="range" value=20 class="form-range" oninput="this.nextElementSibling.value = this.value" min="{{context.ddim_step.min}}" max="{{context.ddim_step.max}}" step="{{context.ddim_step.step}}" id="ddim_step">
+              <output>20</output>
+            </div>
+          </div>
+          <!-- SCALE -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="h6">Scale</h3>
+              <label for="customRange3" class="form-label">0-100 %</label>
+              <input type="range" value=75 class="form-range" oninput="this.nextElementSibling.value = this.value" min="{{context.scale.min}}" max="{{context.scale.max}}" step="{{context.scale.step}}" id="scale">
+              <output>75</output>
+            </div>
+          </div>
+          <!-- Notification settings -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h3 class="h6">Number of Samples</h3>
+              <ul class="list-group list-group-flush mx-n2">
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                  <div class="ms-2 me-auto" id="n_samples_radios">
+
+                    {% for n in context.n_samples %}
+                    <div class="form-check form-check-inline" >
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadioOptions_{{n}}" value={{n}}>
+                        <label class="form-check-label" for="inlineRadioOptions_{{n}}"">{{n}}</label>
+                      </div>
+                    {% endfor %}
+  
+                  </div>
+                </li>
+                <h3 class="h6 mt-3">Number of Iterations</h3>
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                  <div class="ms-2 me-auto" id="n_iters_radios">
+
+                    {% for n in context.n_iters %}
+                    <div class="form-check form-check-inline" >
+                        <input class="form-check-input" type="radio" name="n_iters" id="n_iters_{{n}}" value={{n}}>
+                        <label class="form-check-label" for="n_iters_{{n}}">{{n}}</label>
+                      </div>
+                    {% endfor %}
+  
+                  </div>
+                </li>
+
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                  <div class="ms-2 me-auto">
+
+                    <label for="height" class="form-label">Height</label>
+                    <input type="range" value="512" class="form-range" oninput="this.nextElementSibling.value = this.value" min="{{context.size.min}}" max="{{context.size.max}}" step="{{context.size.step}}" id="height">
+                    <output>512</output>
+                  </div>
+
+                  <div class="ms-2 me-auto">
+                    <label for="width" class="form-label">Width</label>
+                    <input type="range" value="512" class="form-range" oninput="this.nextElementSibling.value = this.value" min="{{context.size.min}}" max="{{context.size.max}}" step="{{context.size.step}}" id="width">
+                    <output>512</output>
+                  </div>            
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" checked="">
+                  </div>
+                </li>
+
+              </ul>
+            </div>
+          </div>
+        </div>
+
+
+    </div>
+
+   </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+
+
+    function submit_job() {
+      var prompt = document.getElementById("prompt");
+      var n_samples = $("#n_samples_radios input[type='radio']:checked").val();
+      var n_iters = $("#n_iters_radios input[type='radio']:checked").val();
+      var height = document.getElementById("height");
+      var width = document.getElementById("width");
+      var scale = document.getElementById("scale");
+      var ddim_step = document.getElementById("ddim_step");
+
+
+      
+      var entry = {
+        "prompt" : prompt.value, 
+        "n_samples" : n_samples,
+        "n_iters" : n_samples,
+        "height" : height.value, 
+        "width" : width.value,
+        "scale" : scale.value,
+        "ddim_step" : ddim_step.value,
+        "job_type" : "txt2img"
+      };
+
+      //  console.log(entry);}
+
+      let spinner = document.getElementById("spinner");
+      spinner.style.visibility = 'visible'; 
+      fetch(`${window.origin}/submit_job`, {
+              method: "POST",
+              credentials: "include",
+              body: JSON.stringify(entry),
+              cache:"no-cache",
+              headers: new Headers({
+                "content-type":"application/json"
+              })
+            })
+      .then(function (response){
+        if (response.status !== 200) {
+          console.log(`Response status was not 200 ${response.status}`);
+        }
+        response.json()
+      .then(function (data) {
+        
+        fetch(`${window.origin}/get_images`, {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify(data),
+        cache:"no-cache",
+        headers: new Headers({
+          "content-type":"application/json"
+                })
+      })
+      .then(function (response){
+        if (response.status !== 200) {
+          console.log(`Response status was not 200 ${response.status}`);
+        }
+        response.json().then(function (data) {
+          
+          $(image).replaceWith(data);
+          spinner.style.visibility = 'hidden'; 
+        })
+      })
+  }
+  )}
+  )}
+    
+  </script>
+  
+
+
+
+{% endblock %}
